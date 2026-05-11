@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>求索咖啡 · 豆单</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #faf8f5;
+    font-family: "PingFang SC", "Helvetica Neue", "Microsoft YaHei", sans-serif;
+    color: #2c1a0e;
+    padding: 24px 0 60px;
+  }
+  .page-header {
+    text-align: center;
+    padding: 32px 20px 28px;
+  }
+  .page-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: #1a0f08;
+    margin-bottom: 6px;
+  }
+  .page-sub {
+    font-size: 12px;
+    color: #9a8a7a;
+    letter-spacing: 1px;
+  }
+  .origin-section {
+    margin-bottom: 28px;
+  }
+  .origin-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #8a7a6a;
+    padding: 0 20px;
+    margin-bottom: 12px;
+    letter-spacing: 1px;
+  }
+  .bean-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 0 16px;
+  }
+  .bean-card {
+    background: #ffffff;
+    border: 1px solid #e8e0d5;
+    border-radius: 12px;
+    padding: 16px;
+  }
+  .bean-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .bean-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1a0f08;
+  }
+  .flavor-tag {
+    font-size: 11px;
+    background: #f5ede0;
+    color: #8a6a3a;
+    padding: 3px 8px;
+    border-radius: 4px;
+  }
+  .bean-details {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .detail {
+    display: flex;
+    font-size: 12px;
+    line-height: 1.6;
+  }
+  .label {
+    color: #9a8a7a;
+    width: 48px;
+    flex-shrink: 0;
+  }
+  .value {
+    color: #3d2e1f;
+  }
+  .flavor-text {
+    line-height: 1.5;
+  }
+  .price {
+    margin-top: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #c47a3a;
+  }
+  .footer {
+    text-align: center;
+    padding: 24px 20px;
+    font-size: 12px;
+    color: #9a8a7a;
+    line-height: 1.8;
+  }
+</style>
+</head>
+<body>
+  <div class="page-header">
+    <div class="page-title">求索咖啡</div>
+    <div class="page-sub">单品豆单 · 扫码了解详情</div>
+  </div>
+  
+  <div class="origin-section">
+    <div class="origin-title">埃塞俄比亚</div>
+    <div class="bean-list">
+    <div class="bean-card">
+      <div class="bean-header">
+        <span class="bean-name">耶加雪菲</span>
+        <span class="flavor-tag">花香果酸</span>
+      </div>
+      <div class="bean-details">
+        <div class="detail"><span class="label">处理法</span><span class="value">水洗</span></div>
+        <div class="detail"><span class="label">品 种</span><span class="value">原生种</span></div>
+        <div class="detail"><span class="label">海 拔</span><span class="value">1900-2000m</span></div>
+        <div class="detail"><span class="label">烘焙度</span><span class="value">浅度烘焙</span></div>
+        <div class="detail"><span class="label">风味</span><span class="value flavor-text">花香果酸</span></div>
+      </div>
+      <div class="price">¥70/半磅</div>
+    </div>
+    <div class="bean-card">
+      <div class="bean-header">
+        <span class="bean-name">荔枝红颜</span>
+        <span class="flavor-tag">花香</span>
+      </div>
+      <div class="bean-details">
+        <div class="detail"><span class="label">处理法</span><span class="value">酵母厌氧日晒</span></div>
+        <div class="detail"><span class="label">品 种</span><span class="value">74158</span></div>
+        <div class="detail"><span class="label">海 拔</span><span class="value">2080-2160m</span></div>
+        <div class="detail"><span class="label">烘焙度</span><span class="value">浅度烘焙</span></div>
+        <div class="detail"><span class="label">风味</span><span class="value flavor-text">花香、甘蔗、哈密瓜、成熟荔枝、草莓、果汁感爆棚</span></div>
+      </div>
+      <div class="price">¥110/半磅</div>
+    </div>
+    <div class="bean-card">
+      <div class="bean-header">
+        <span class="bean-name">格拉纳</span>
+        <span class="flavor-tag">黄桃</span>
+      </div>
+      <div class="bean-details">
+        <div class="detail"><span class="label">处理法</span><span class="value">日晒</span></div>
+        <div class="detail"><span class="label">品 种</span><span class="value">74110
+74158
+74112</span></div>
+        <div class="detail"><span class="label">海 拔</span><span class="value">2180m</span></div>
+        <div class="detail"><span class="label">烘焙度</span><span class="value">浅度烘焙</span></div>
+        <div class="detail"><span class="label">风味</span><span class="value flavor-text">黄桃、芒果、菠萝蜜、莓果</span></div>
+      </div>
+      <div class="price">¥90/半磅</div>
+    </div>
+    <div class="bean-card">
+      <div class="bean-header">
+        <span class="bean-name">桂花窖</span>
+        <span class="flavor-tag">桂花酿</span>
+      </div>
+      <div class="bean-details">
+        <div class="detail"><span class="label">处理法</span><span class="value">古法鲜花窖制+水洗</span></div>
+        <div class="detail"><span class="label">品 种</span><span class="value">Heirloom</span></div>
+        <div class="detail"><span class="label">海 拔</span><span class="value">1700-1900m</span></div>
+        <div class="detail"><span class="label">烘焙度</span><span class="value">浅度烘焙</span></div>
+        <div class="detail"><span class="label">风味</span><span class="value flavor-text">桂花酿、热带水果、蜂蜜、红茶</span></div>
+      </div>
+      <div class="price">¥120/半磅</div>
+    </div>
+    <div class="bean-card">
+      <div class="bean-header">
+        <span class="bean-name">爱托74158</span>
+        <span class="flavor-tag">花香</span>
+      </div>
+      <div class="bean-details">
+        <div class="detail"><span class="label">处理法</span><span class="value">水洗</span></div>
+        <div class="detail"><span class="label">品 种</span><span class="value">74158</span></div>
+        <div class="detail"><span class="label">海 拔</span><span class="value">1900-2350m</span></div>
+        <div class="detail"><span class="label">烘焙度</span><span class="value">浅度烘焙</span></div>
+        <div class="detail"><span class="label">风味</span><span class="value flavor-text">花香、茉莉、柑橘、柠檬、血橙</span></div>
+      </div>
+      <div class="price">¥120/半磅</div>
+    </div>
+    <div class="bean-card">
+      <div class="bean-header">
+        <span class="bean-name">清茉-耶加雪菲</span>
+        <span class="flavor-tag">茉莉</span>
+      </div>
+      <div class="bean-details">
+        <div class="detail"><span class="label">处理法</span><span class="value">水洗</span></div>
+        <div class="detail"><span class="label">品 种</span><span class="value">Heirloom原生种</span></div>
+        <div class="detail"><span class="label">海 拔</span><span class="value">1950m</span></div>
+        <div class="detail"><span class="label">烘焙度</span><span class="value">浅度烘焙</span></div>
+        <div class="detail"><span class="label">风味</span><span class="value flavor-text">茉莉、绿茶、柑橘、蜂蜜、奶油</span></div>
+      </div>
+      <div class="price">¥90/半磅</div>
+    </div>
+    <div class="bean-card">
+      <div class="bean-header">
+        <span class="bean-name">丹琪-耶加雪菲</span>
+        <span class="flavor-tag">花香</span>
+      </div>
+      <div class="bean-details">
+        <div class="detail"><span class="label">处理法</span><span class="value">水洗</span></div>
+        <div class="detail"><span class="label">品 种</span><span class="value">WOLISH/DEGA</span></div>
+        <div class="detail"><span class="label">海 拔</span><span class="value">2000-2300m</span></div>
+        <div class="detail"><span class="label">烘焙度</span><span class="value">浅度烘焙</span></div>
+        <div class="detail"><span class="label">风味</span><span class="value flavor-text">花香、柑橘、伯爵茶、莓果、木瓜、青柠、茶感</span></div>
+      </div>
+      <div class="price">¥130/半磅</div>
+    </div>
+    <div class="bean-card">
+      <div class="bean-header">
+        <span class="bean-name">花魁11-谷吉</span>
+        <span class="flavor-tag">玫瑰花</span>
+      </div>
+      <div class="bean-details">
+        <div class="detail"><span class="label">处理法</span><span class="value">定制日晒</span></div>
+        <div class="detail"><span class="label">品 种</span><span class="value">Heirloom</span></div>
+        <div class="detail"><span class="label">海 拔</span><span class="value">2200-2350m</span></div>
+        <div class="detail"><span class="label">烘焙度</span><span class="value">浅度烘焙</span></div>
+        <div class="detail"><span class="label">风味</span><span class="value flavor-text">玫瑰花、草莓糖、水蜜桃、砂糖橘。</span></div>
+      </div>
+      <div class="price">¥100/半磅</div>
+    </div>
+    <div class="bean-card">
+      <div class="bean-header">
+        <span class="bean-name">戈里瑰夏-瑰夏村红标</span>
+        <span class="flavor-tag">新鲜浆果</span>
+      </div>
+      <div class="bean-details">
+        <div class="detail"><span class="label">处理法</span><span class="value">日晒</span></div>
+        <div class="detail"><span class="label">品 种</span><span class="value">戈里瑰夏</span></div>
+        <div class="detail"><span class="label">海 拔</span><span class="value">1926-2011m</span></div>
+        <div class="detail"><span class="label">烘焙度</span><span class="value">浅度烘焙</span></div>
+        <div class="detail"><span class="label">风味</span><span class="value flavor-text">新鲜浆果、葡萄干、树莓、桑格利亚果酒、伯爵茶</span></div>
+      </div>
+      <div class="price">¥210/半磅</div>
+    </div></div>
+  </div>
+  <div class="origin-section">
+    <div class="origin-title">中国</div>
+    <div class="bean-list">
+    <div class="bean-card">
+      <div class="bean-header">
+        <span class="bean-name">银辉蝶舞SOE</span>
+        <span class="flavor-tag">西柚</span>
+      </div>
+      <div class="bean-details">
+        <div class="detail"><span class="label">处理法</span><span class="value">精致红酒日晒</span></div>
+        <div class="detail"><span class="label">品 种</span><span class="value">卡帝姆</span></div>
+        <div class="detail"><span class="label">海 拔</span><span class="value">1200-1600m</span></div>
+        <div class="detail"><span class="label">烘焙度</span><span class="value">中深度烘焙</span></div>
+        <div class="detail"><span class="label">风味</span><span class="value flavor-text">西柚、红酒、芒果、可可。</span></div>
+      </div>
+      <div class="price">¥70/半磅</div>
+    </div></div>
+  </div>
+  <div class="origin-section">
+    <div class="origin-title">哥伦比亚</div>
+    <div class="bean-list">
+    <div class="bean-card">
+      <div class="bean-header">
+        <span class="bean-name">慧兰</span>
+        <span class="flavor-tag">柑柚香味</span>
+      </div>
+      <div class="bean-details">
+        <div class="detail"><span class="label">处理法</span><span class="value">水洗</span></div>
+        <div class="detail"><span class="label">品 种</span><span class="value">Caturra</span></div>
+        <div class="detail"><span class="label">海 拔</span><span class="value">1300-1800m</span></div>
+        <div class="detail"><span class="label">烘焙度</span><span class="value">中深度烘焙</span></div>
+        <div class="detail"><span class="label">风味</span><span class="value flavor-text">柑柚香味，青柠甜度和适宜的酸度，焦糖感浓郁。</span></div>
+      </div>
+      <div class="price">¥70/半磅</div>
+    </div>
+    <div class="bean-card">
+      <div class="bean-header">
+        <span class="bean-name">情人谷</span>
+        <span class="flavor-tag">白色花香</span>
+      </div>
+      <div class="bean-details">
+        <div class="detail"><span class="label">处理法</span><span class="value">水洗</span></div>
+        <div class="detail"><span class="label">品 种</span><span class="value">Pink Bourbon</span></div>
+        <div class="detail"><span class="label">海 拔</span><span class="value">1700-2050m</span></div>
+        <div class="detail"><span class="label">烘焙度</span><span class="value">浅度烘焙</span></div>
+        <div class="detail"><span class="label">风味</span><span class="value flavor-text">白色花香、白桃、树莓、柑橘、红茶</span></div>
+      </div>
+      <div class="price">¥160/半磅</div>
+    </div>
+    <div class="bean-card">
+      <div class="bean-header">
+        <span class="bean-name">花香瑰夏-娜玲珑</span>
+        <span class="flavor-tag">伯爵茶感</span>
+      </div>
+      <div class="bean-details">
+        <div class="detail"><span class="label">处理法</span><span class="value">啤酒花发酵</span></div>
+        <div class="detail"><span class="label">品 种</span><span class="value">瑰夏</span></div>
+        <div class="detail"><span class="label">海 拔</span><span class="value">1600m</span></div>
+        <div class="detail"><span class="label">烘焙度</span><span class="value">浅度烘焙</span></div>
+        <div class="detail"><span class="label">风味</span><span class="value flavor-text">伯爵茶感、白色花香、柑橘、葡萄柚。</span></div>
+      </div>
+      <div class="price">¥130/半磅</div>
+    </div>
+    <div class="bean-card">
+      <div class="bean-header">
+        <span class="bean-name">心动瑰夏-Plop庄园</span>
+        <span class="flavor-tag">红糖</span>
+      </div>
+      <div class="bean-details">
+        <div class="detail"><span class="label">处理法</span><span class="value">水洗 - 双重发酵60小时</span></div>
+        <div class="detail"><span class="label">品 种</span><span class="value">瑰夏</span></div>
+        <div class="detail"><span class="label">海 拔</span><span class="value">1900m</span></div>
+        <div class="detail"><span class="label">烘焙度</span><span class="value">浅度烘焙</span></div>
+        <div class="detail"><span class="label">风味</span><span class="value flavor-text">红糖、椰子、橙子、甜巧克力；啜吸带有柠檬、梨子、苹果和红糖风味，柠檬草、焦糖尾韵，中等柠檬酸，多汁醇厚度。</span></div>
+      </div>
+      <div class="price">¥180/半磅</div>
+    </div></div>
+  </div>
+  <div class="origin-section">
+    <div class="origin-title">印度尼西亚</div>
+    <div class="bean-list">
+    <div class="bean-card">
+      <div class="bean-header">
+        <span class="bean-name">黄金曼特宁</span>
+        <span class="flavor-tag">醇厚度极佳</span>
+      </div>
+      <div class="bean-details">
+        <div class="detail"><span class="label">处理法</span><span class="value">湿剥法</span></div>
+        <div class="detail"><span class="label">品 种</span><span class="value">Timtim</span></div>
+        <div class="detail"><span class="label">海 拔</span><span class="value">1100-1500m</span></div>
+        <div class="detail"><span class="label">烘焙度</span><span class="value">深度烘焙</span></div>
+        <div class="detail"><span class="label">风味</span><span class="value flavor-text">醇厚度极佳，淡淡的果酸，香气非常有个性，焦糖香，回甘明显。</span></div>
+      </div>
+      <div class="price">¥130/半磅</div>
+    </div>
+    <div class="bean-card">
+      <div class="bean-header">
+        <span class="bean-name">曼特宁</span>
+        <span class="flavor-tag">香料</span>
+      </div>
+      <div class="bean-details">
+        <div class="detail"><span class="label">处理法</span><span class="value">湿剥法</span></div>
+        <div class="detail"><span class="label">品 种</span><span class="value">Timtim</span></div>
+        <div class="detail"><span class="label">海 拔</span><span class="value">1000-1200m</span></div>
+        <div class="detail"><span class="label">烘焙度</span><span class="value">深度烘焙</span></div>
+        <div class="detail"><span class="label">风味</span><span class="value flavor-text">香料、苏格兰黄酒、黑巧克力、坚果，甜度高，干净，醇厚。</span></div>
+      </div>
+      <div class="price">¥50/半磅</div>
+    </div></div>
+  </div>
+  <div class="origin-section">
+    <div class="origin-title">肯尼亚</div>
+    <div class="bean-list">
+    <div class="bean-card">
+      <div class="bean-header">
+        <span class="bean-name">红布林</span>
+        <span class="flavor-tag">莓果</span>
+      </div>
+      <div class="bean-details">
+        <div class="detail"><span class="label">处理法</span><span class="value">水洗</span></div>
+        <div class="detail"><span class="label">品 种</span><span class="value">SL28 SL34</span></div>
+        <div class="detail"><span class="label">海 拔</span><span class="value">1700-1900m</span></div>
+        <div class="detail"><span class="label">烘焙度</span><span class="value">浅度烘焙</span></div>
+        <div class="detail"><span class="label">风味</span><span class="value flavor-text">莓果、柑橘、红布林、焦糖、酸甜平衡</span></div>
+      </div>
+      <div class="price">¥90/半磅</div>
+    </div>
+    <div class="bean-card">
+      <div class="bean-header">
+        <span class="bean-name">古玛晨曦-裂谷产区</span>
+        <span class="flavor-tag">葡萄柚</span>
+      </div>
+      <div class="bean-details">
+        <div class="detail"><span class="label">处理法</span><span class="value">水洗</span></div>
+        <div class="detail"><span class="label">品 种</span><span class="value">SL28、SL34</span></div>
+        <div class="detail"><span class="label">海 拔</span><span class="value">1820m</span></div>
+        <div class="detail"><span class="label">烘焙度</span><span class="value">浅度烘焙</span></div>
+        <div class="detail"><span class="label">风味</span><span class="value flavor-text">葡萄柚、红茶、果汁感</span></div>
+      </div>
+      <div class="price">¥120/半磅</div>
+    </div>
+    <div class="bean-card">
+      <div class="bean-header">
+        <span class="bean-name">东古尼-浬里</span>
+        <span class="flavor-tag">玫瑰花</span>
+      </div>
+      <div class="bean-details">
+        <div class="detail"><span class="label">处理法</span><span class="value">微厌氧日晒</span></div>
+        <div class="detail"><span class="label">品 种</span><span class="value">SL28、SL34</span></div>
+        <div class="detail"><span class="label">海 拔</span><span class="value">1650-1900m</span></div>
+        <div class="detail"><span class="label">烘焙度</span><span class="value">浅度烘焙</span></div>
+        <div class="detail"><span class="label">风味</span><span class="value flavor-text">玫瑰花、草莓、红糖、油桃</span></div>
+      </div>
+      <div class="price">¥150/半磅</div>
+    </div></div>
+  </div>
+  <div class="origin-section">
+    <div class="origin-title">卢旺达</div>
+    <div class="bean-list">
+    <div class="bean-card">
+      <div class="bean-header">
+        <span class="bean-name">基伍湖</span>
+        <span class="flavor-tag">白色花香</span>
+      </div>
+      <div class="bean-details">
+        <div class="detail"><span class="label">处理法</span><span class="value">日晒</span></div>
+        <div class="detail"><span class="label">品 种</span><span class="value">红波旁</span></div>
+        <div class="detail"><span class="label">海 拔</span><span class="value">1800-2000m</span></div>
+        <div class="detail"><span class="label">烘焙度</span><span class="value">浅度烘焙</span></div>
+        <div class="detail"><span class="label">风味</span><span class="value flavor-text">白色花香、莓果、红糖、柑橘、蜂蜜、果汁感</span></div>
+      </div>
+      <div class="price">¥130/半磅</div>
+    </div></div>
+  </div>
+  <div class="origin-section">
+    <div class="origin-title">巴拿马</div>
+    <div class="bean-list">
+    <div class="bean-card">
+      <div class="bean-header">
+        <span class="bean-name">花蝴蝶</span>
+        <span class="flavor-tag">白色花香</span>
+      </div>
+      <div class="bean-details">
+        <div class="detail"><span class="label">处理法</span><span class="value">水洗</span></div>
+        <div class="detail"><span class="label">品 种</span><span class="value">70%瑰夏</span></div>
+        <div class="detail"><span class="label">海 拔</span><span class="value">1400-1700m</span></div>
+        <div class="detail"><span class="label">烘焙度</span><span class="value">浅度烘焙</span></div>
+        <div class="detail"><span class="label">风味</span><span class="value flavor-text">白色花香，佛手柑，莓果，樱桃</span></div>
+      </div>
+      <div class="price">¥140/半磅</div>
+    </div></div>
+  </div>
+  <div class="origin-section">
+    <div class="origin-title">牙买加</div>
+    <div class="bean-list">
+    <div class="bean-card">
+      <div class="bean-header">
+        <span class="bean-name">蓝山一号</span>
+        <span class="flavor-tag">奶油</span>
+      </div>
+      <div class="bean-details">
+        <div class="detail"><span class="label">处理法</span><span class="value">水洗</span></div>
+        <div class="detail"><span class="label">品 种</span><span class="value">铁皮卡</span></div>
+        <div class="detail"><span class="label">海 拔</span><span class="value">1066-1524米m</span></div>
+        <div class="detail"><span class="label">烘焙度</span><span class="value">中深度烘焙</span></div>
+        <div class="detail"><span class="label">风味</span><span class="value flavor-text">奶油、黑莓、碧根果、黑巧克力、回甘久</span></div>
+      </div>
+      <div class="price">¥480/半磅</div>
+    </div></div>
+  </div>
+  <div class="footer">
+    广东省韶关市求索咖啡<br>
+    了解更多豆子信息，欢迎咨询咖啡师
+  </div>
+</body>
+</html>
