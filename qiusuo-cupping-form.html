@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>杯测杯 8人</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #F5F0EB; font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; padding: 16px; }
+.header { text-align: center; margin-bottom: 14px; }
+.header h1 { color: #3C2A1E; font-size: 20px; margin-bottom: 4px; }
+.header p { color: #8B7355; font-size: 13px; }
+.sample-select { margin-top: 8px; display: inline-block; width: 40%; text-align: left; }
+.sample-select select { width: 100%; padding: 5px 12px; border: 1px solid #E0D6CC; border-radius: 20px; font-size: 13px; color: #3C2A1E; background: #fff; cursor: pointer; }
+.taster-select { margin-top: 8px; display: inline-block; width: 40%; text-align: left; margin-right: 10%; }
+.taster-select select { width: 100%; padding: 5px 12px; border: 1px solid #E0D6CC; border-radius: 20px; font-size: 13px; color: #3C2A1E; background: #fff; cursor: pointer; }
+.cards { display: flex; flex-direction: column; gap: 12px; max-width: 600px; margin: 14px auto 0; }
+.sample-card { background: #fff; border-radius: 10px; box-shadow: 0 2px 8px rgba(60,42,30,0.10); overflow: hidden; }
+.card-header { background: #3C2A1E; color: #fff; padding: 9px 12px; display: flex; align-items: center; gap: 10px; }
+.seq-badge { background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+.bean-label { flex: 1; font-size: 13px; font-weight: 600; }
+.card-body { padding: 12px; }
+.defect-group { margin-bottom: 10px; }
+.defect-label { font-size: 11px; color: #8B7355; margin-bottom: 6px; }
+.defect-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+.defect-tag { cursor: pointer; }
+.defect-tag input { display: none; }
+.defect-tag span { display: inline-block; padding: 3px 9px; border: 1px solid #E0D6CC; border-radius: 20px; font-size: 12px; color: #666; transition: all 0.2s; }
+.defect-tag input:checked + span { background: #D84315; color: #fff; border-color: #D84315; }
+.defect-tag input[name*="无问题"]:checked + span { background: #2E7D32; color: #fff; border-color: #2E7D32; }
+.scores { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; margin-bottom: 8px; }
+.score-item { background: #F8F4F0; border-radius: 6px; padding: 5px 3px; text-align: center; }
+.score-item label { display: block; font-size: 10px; color: #8B7355; margin-bottom: 2px; }
+.score-item input { width: 100%; text-align: center; border: none; background: transparent; font-size: 13px; color: #3C2A1E; padding: 0; }
+.score-item input::placeholder { color: #CCC; font-size: 10px; }
+.score-item input:focus { outline: none; background: #FFF3E0; border-radius: 4px; }
+.notes-row { display: flex; align-items: center; gap: 6px; }
+.notes-label { font-size: 11px; color: #8B7355; white-space: nowrap; }
+.notes-row input { flex: 1; padding: 5px 8px; border: 1px solid #E0D6CC; border-radius: 6px; font-size: 12px; color: #3C2A1E; }
+.footer { max-width: 600px; margin: 16px auto 0; }
+.btn { display: block; width: 100%; padding: 12px; background: #3C2A1E; color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; margin-bottom: 10px; }
+.btn:hover { background: #5D4037; }
+.btn:active { background: #2E1E12; transform: scale(0.99); }
+.result-area { margin-top: 10px; display: none; }
+.result-area.show { display: block; }
+.result-success { background: #E8F5E9; border: 1px solid #A5D6A7; border-radius: 8px; padding: 12px; }
+.result-header { font-size: 13px; color: #2E7D32; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+.report-text { background: #F8F4F0; border-radius: 6px; padding: 10px; font-family: monospace; font-size: 12px; color: #3C2A1E; white-space: pre-wrap; line-height: 1.6; max-height: 350px; overflow-y: auto; }
+.copy-btn { display: inline-block; margin-top: 8px; padding: 6px 14px; background: #E8F4FD; color: #1565C0; border: 1px solid #90CAF9; border-radius: 6px; font-size: 12px; cursor: pointer; }
+.copy-btn:hover { background: #BBDEFB; }
+.hint { text-align: center; font-size: 12px; color: #BDBDBD; margin-top: 12px; }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>☕ 求索咖啡杯测表</h1>
+  <p>8人 · 盲测专用</p>
+  <div class="taster-select">
+    <select id="tasterSelect" onchange="onTasterChange()">
+      <option value="1" selected>杯测员 01</option>
+      <option value="2">杯测员 02</option>
+      <option value="3">杯测员 03</option>
+      <option value="4">杯测员 04</option>
+      <option value="5">杯测员 05</option>
+      <option value="6">杯测员 06</option>
+      <option value="7">杯测员 07</option>
+      <option value="8">杯测员 08</option>
+    </select>
+  </div>
+  <div class="sample-select">
+    <select id="sampleCount" onchange="onSampleCountChange()">
+      <option value="2" selected>2个样品</option>
+      <option value="3">3个样品</option>
+      <option value="4">4个样品</option>
+      <option value="5">5个样品</option>
+      <option value="6">6个样品</option>
+      <option value="7">7个样品</option>
+      <option value="8">8个样品</option>
+      <option value="9">9个样品</option>
+      <option value="10">10个样品</option>
+      <option value="11">11个样品</option>
+      <option value="12">12个样品</option>
+      <option value="13">13个样品</option>
+      <option value="14">14个样品</option>
+      <option value="15">15个样品</option>
+      <option value="16">16个样品</option>
+      <option value="17">17个样品</option>
+      <option value="18">18个样品</option>
+      <option value="19">19个样品</option>
+      <option value="20">20个样品</option>
+    </select>
+  </div>
+</div>
+
+<div class="cards" id="cards-container"></div>
+
+<div class="footer">
+  <button class="btn" onclick="generateAll()">📤 生成报告发给乐哥</button>
+  <div class="result-area" id="resultArea">
+    <div class="result-success">
+      <div class="result-header">✅ 报告已生成，复制后发给乐哥</div>
+      <div class="report-text" id="reportText"></div>
+      <button class="copy-btn" onclick="copyReport()">📋 一键复制</button>
+    </div>
+  </div>
+</div>
+
+<div class="hint">发给乐哥后，乐哥会汇总统计8人的数据</div>
+
+<script>
+let currentTaster = 1;
+let currentSampleCount = 2;
+
+const SAMPLE_NAMES = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T'];
+const DEFECTS = ['涩','酸','苦','平淡','空洞','夹生'];
+const SCORE_FIELDS = ['aroma','acidity','sweetness','body','aftertaste','overall'];
+const SCORE_LABELS = { aroma:'香气', acidity:'酸质', sweetness:'甜感', body:'醇厚', aftertaste:'回甘', overall:'整体' };
+
+function makeCard(t, s) {
+  const num = String(s).padStart(2, '0');
+  let defectsHtml = DEFECTS.map(d =>
+    '<label class="defect-tag"><input type="checkbox" name="defect-' + t + '-' + s + '" value="' + d + '"><span>' + d + '</span></label>'
+  ).join('') + '<label class="defect-tag"><input type="checkbox" name="defect-' + t + '-' + s + '" value="无问题" checked><span>无问题</span></label>';
+
+  let scoresHtml = SCORE_FIELDS.map(f =>
+    '<div class="score-item"><label>' + SCORE_LABELS[f] + '</label><input type="number" id="' + f + '-' + t + '-' + s + '" min="1" max="10" placeholder="—"></div>'
+  ).join('');
+
+  return '<div class="sample-card">' +
+    '<div class="card-header">' +
+      '<span class="seq-badge">' + num + '</span>' +
+      '<span class="bean-label">样品' + SAMPLE_NAMES[s-1] + '</span>' +
+    '</div>' +
+    '<div class="card-body">' +
+      '<div class="defect-group">' +
+        '<div class="defect-label">问题</div>' +
+        '<div class="defect-tags">' + defectsHtml + '</div>' +
+      '</div>' +
+      '<div class="scores">' + scoresHtml + '</div>' +
+      '<div class="notes-row">' +
+        '<label class="notes-label">备注</label>' +
+        '<input type="text" id="notes-' + t + '-' + s + '" placeholder="风味描述...">' +
+      '</div>' +
+    '</div>' +
+  '</div>';
+}
+
+function render() {
+  const container = document.getElementById('cards-container');
+  let html = '';
+  for (let s = 1; s <= currentSampleCount; s++) {
+    html += makeCard(currentTaster, s);
+  }
+  container.innerHTML = html;
+}
+
+function onTasterChange() {
+  currentTaster = parseInt(document.getElementById('tasterSelect').value);
+  render();
+}
+
+function onSampleCountChange() {
+  currentSampleCount = parseInt(document.getElementById('sampleCount').value);
+  render();
+}
+
+function getDefects(t, s) {
+  return Array.from(document.querySelectorAll('input[name="defect-' + t + '-' + s + '"]:checked')).map(el => el.value);
+}
+
+function getScore(t, s, field) {
+  const el = document.getElementById(field + '-' + t + '-' + s);
+  return el && el.value ? parseInt(el.value) : null;
+}
+
+function generateAll() {
+  const t = currentTaster;
+  const lines = [];
+  lines.push('【杯测报告】杯测员' + String(t).padStart(2,'0') + ' · ' + currentSampleCount + '个样品');
+  lines.push('');
+
+  let hasData = false;
+  for (let s = 1; s <= currentSampleCount; s++) {
+    const defects = getDefects(t, s);
+    const scoreParts = [];
+    SCORE_FIELDS.forEach(f => {
+      const v = getScore(t, s, f);
+      if (v) scoreParts.push(SCORE_LABELS[f].charAt(0) + v);
+    });
+    const notes = document.getElementById('notes-' + t + '-' + s) ? document.getElementById('notes-' + t + '-' + s).value.trim() : '';
+
+    if (scoreParts.length > 0 || defects.length > 0 || notes) {
+      hasData = true;
+      lines.push(String(s).padStart(2,'0') + '# 样品' + SAMPLE_NAMES[s-1] + '：' +
+        (defects.length > 0 ? '问题：' + defects.join('、') + ' | ' : '') +
+        (scoreParts.length > 0 ? scoreParts.join(' / ') : '') +
+        (notes ? ' | ' + notes : '')
+      );
+    }
+  }
+
+  if (!hasData) {
+    alert('还没有填写任何数据哦~');
+    return;
+  }
+
+  const report = lines.join('\n');
+  document.getElementById('reportText').textContent = report;
+  document.getElementById('resultArea').classList.add('show');
+}
+
+function copyReport() {
+  const text = document.getElementById('reportText').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.querySelector('.copy-btn');
+    btn.textContent = '✅ 已复制';
+    btn.style.background = '#C8E6C9';
+    btn.style.color = '#2E7D32';
+    setTimeout(() => {
+      btn.textContent = '📋 一键复制';
+      btn.style.background = '';
+      btn.style.color = '';
+    }, 2000);
+  }).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    alert('已复制到剪贴板');
+  });
+}
+
+// Init
+render();
+</script>
+<div style="text-align:center;margin-top:20px;padding-bottom:16px;font-size:12px;color:#8B7355;">广东省韶关市浈江区帽峰路文居楼首层4-5号铺</div>
+</body>
+</html>
