@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>杯测杯 8人</title>
+<title>杯测表</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { background: #F5F0EB; font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; padding: 16px; }
@@ -53,7 +53,7 @@ body { background: #F5F0EB; font-family: -apple-system, "PingFang SC", "Microsof
 </head>
 <body>
 <div class="header">
-  <h1>☕ 求索咖啡杯测表</h1>
+  <h1>☕ 咖啡杯测表</h1>
   <p>8人 · 盲测专用</p>
   <div class="taster-select">
     <select id="tasterSelect" onchange="onTasterChange()">
@@ -95,17 +95,33 @@ body { background: #F5F0EB; font-family: -apple-system, "PingFang SC", "Microsof
 <div class="cards" id="cards-container"></div>
 
 <div class="footer">
-  <button class="btn" onclick="generateAll()">📤 生成报告发给乐哥</button>
+  <button class="btn" onclick="generateAll()">📤 生成报告</button>
+  <button class="btn" onclick="generateAiPrompt()" style="background:#5D4037;">🤖 复制Ai提示词</button>
+  <div class="result-area" id="promptArea">
+    <div class="result-success">
+      <div class="result-header">✅ Ai提示词已生成，复制后发给Ai</div>
+      <div class="report-text" id="promptText"></div>
+      <button class="copy-btn" id="copyPromptBtn" onclick="copyPrompt()">📋 一键复制</button>
+    </div>
+  </div>
   <div class="result-area" id="resultArea">
     <div class="result-success">
-      <div class="result-header">✅ 报告已生成，复制后发给乐哥</div>
+      <div class="result-header">✅ 报告已生成，复制后发给Ai</div>
       <div class="report-text" id="reportText"></div>
       <button class="copy-btn" onclick="copyReport()">📋 一键复制</button>
     </div>
   </div>
 </div>
 
-<div class="hint">发给乐哥后，乐哥会汇总统计8人的数据</div>
+<div class="hint">发给Ai 统计</div>
+
+<div style="max-width:600px;margin:16px auto 0;padding:12px;background:#FFF9F0;border-radius:8px;font-size:12px;color:#8B7355;line-height:1.6;">
+  <div style="font-weight:600;margin-bottom:6px;color:#3C2A1E;">📖 使用方法</div>
+  1. 选择杯测员和样品数量<br>
+  2. 填写各样品评分（1-10分）<br>
+  3. 点击"生成报告"复制杯测数据<br>
+  4. 多人参与时，由一人收集其他人评分后发给Ai统计
+</div>
 
 <script>
 let currentTaster = 1;
@@ -122,9 +138,11 @@ function makeCard(t, s) {
     '<label class="defect-tag"><input type="checkbox" name="defect-' + t + '-' + s + '" value="' + d + '"><span>' + d + '</span></label>'
   ).join('') + '<label class="defect-tag"><input type="checkbox" name="defect-' + t + '-' + s + '" value="无问题" checked><span>无问题</span></label>';
 
-  let scoresHtml = SCORE_FIELDS.map(f =>
-    '<div class="score-item"><label>' + SCORE_LABELS[f] + '</label><input type="number" id="' + f + '-' + t + '-' + s + '" min="1" max="10" placeholder="—"></div>'
-  ).join('');
+  let scoresHtml = SCORE_FIELDS.map(f => {
+    let options = '<option value="">—</option>';
+    for (let i = 1; i <= 10; i++) options += '<option value="' + i + '">' + i + '</option>';
+    return '<div class="score-item"><label>' + SCORE_LABELS[f] + '</label><select id="' + f + '-' + t + '-' + s + '" style="width:100%;text-align:center;border:none;background:transparent;font-size:13px;color:#3C2A1E;padding:0;"><option value="" disabled selected>—</option>' + options.replace('<option value="">—</option>', '') + '</select></div>';
+  }).join('');
 
   return '<div class="sample-card">' +
     '<div class="card-header">' +
@@ -232,9 +250,49 @@ function copyReport() {
   });
 }
 
+function generateAiPrompt() {
+  const lines = [];
+  lines.push('【杯测汇总任务】');
+  lines.push('');
+  lines.push('以下是本次杯测数据，请帮我汇总分析并排名：');
+  lines.push('');
+  lines.push('请完成以下任务：');
+  lines.push('1. 汇总所有人的评分，取平均值');
+  lines.push('2. 列出各样品发现的问题（如有）');
+  lines.push('3. 按综合分数从高到低排名');
+  lines.push('4. 给出最终推荐排名');
+  lines.push('');
+  lines.push('注意：综合分数以整体(overall)为主分，辅以其他维度综合评估。');
+
+  const prompt = lines.join('\n');
+  document.getElementById('promptText').textContent = prompt;
+  document.getElementById('promptArea').classList.add('show');
+}
+
+function copyPrompt() {
+  const text = document.getElementById('promptText').textContent;
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  document.execCommand('copy');
+  document.body.removeChild(ta);
+  const btn = document.getElementById('copyPromptBtn');
+  btn.textContent = '✅ 已复制';
+  btn.style.background = '#C8E6C9';
+  btn.style.color = '#2E7D32';
+  setTimeout(() => {
+    btn.textContent = '📋 一键复制';
+    btn.style.background = '';
+    btn.style.color = '';
+  }, 2000);
+}
+
 // Init
 render();
 </script>
-<div style="text-align:center;margin-top:20px;padding-bottom:16px;font-size:12px;color:#8B7355;">广东省韶关市浈江区帽峰路文居楼首层4-5号铺</div>
+<div style="text-align:center;margin-top:20px;padding-bottom:16px;font-size:12px;color:#8B7355;">求索咖啡 <a href="https://v.douyin.com/krhEueyJL5o/" target="_blank">抖音</a> · <a href="https://xhslink.com/m/2nVhPZthUPb" target="_blank">小红书</a></div>
 </body>
 </html>
