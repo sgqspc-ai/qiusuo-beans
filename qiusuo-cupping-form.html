@@ -393,15 +393,19 @@ function submitRoasterMapping() {
 
   const mappingText = '【烘焙选手绑定】\n' + mappings.join('\n');
 
-  // ── 自动追加到AI提示词 ──
+  // ── 自动追加到AI提示词（替换而非追加） ──
   let promptArea = document.getElementById('promptArea');
   if (!promptArea.classList.contains('show')) {
     generateAiPrompt(); // 先把模板跑出来
   }
   const promptText = document.getElementById('promptText');
-  // 插在「【杯测汇总任务】」上方
   let current = promptText.textContent;
   const marker = '【杯测汇总任务】';
+  // 先删掉旧绑定块（如果存在），再插入新的
+  const oldBlockPattern = /【烘焙选手绑定】[\s\S]*?\n\n(?=【杯测汇总任务】)/;
+  if (oldBlockPattern.test(current)) {
+    current = current.replace(oldBlockPattern, '');
+  }
   const insertPos = current.indexOf(marker);
   if (insertPos !== -1) {
     promptText.textContent = current.slice(0, insertPos) + '【烘焙选手绑定】\n' + mappings.join('\n') + '\n\n' + current.slice(insertPos);
