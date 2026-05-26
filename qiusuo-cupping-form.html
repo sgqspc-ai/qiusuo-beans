@@ -151,26 +151,24 @@ body { background: #F5F0EB; font-family: -apple-system, "PingFang SC", "Microsof
   5. 杯测结束后，输入烘焙选手编号与样品编号的对应关系
 </div>
 
-<!-- 不蒜子统计 -->
+<!-- 51.la 统计 -->
 <div class="stats-bar">
-  <span class="today">今日访问: <span id="busuanzi_container_site_pv"><span id="busuanzi_value_site_pv">-</span></span></span>
-  <span class="total">总访问: <span id="busuanzi_container_site_uv"><span id="busuanzi_value_site_uv">-</span></span></span>
+  <span class="today">今日访问: <span id="LA_CONTAINER_TODAY">-</span></span>
+  <span class="total">总访问: <span id="LA_CONTAINER_TOTAL">-</span></span>
 </div>
 
 <div style="text-align:center;margin-top:20px;padding-bottom:16px;font-size:12px;color:#8B7355;">
   求索咖啡 <a href="https://v.douyin.com/krhEueyJL5o/" target="_blank">抖音</a> · <a href="https://xhslink.com/m/2nVhPZthUPb" target="_blank">小红书</a>
 </div>
 
+<script charset="UTF-8" id="LA_COLLECT" src="//sdk.51.la/js-sdk-pro.min.js"></script>
+<script>LA.init({id:"3Q3STZKBevO6Z8CL",ck:"3Q3STZKBevO6Z8CL"})</script>
 <script>
-var _hmt = _hmt || [];
-(function() {
-  var hm = document.createElement("script");
-  hm.src = "https://hm.baidu.com/hm.js?13位站点ID";
-  var s = document.getElementsByTagName("script")[0]; 
-  s.parentNode.insertBefore(hm, s);
-})();
+document.addEventListener('LA.enter', function(data) {
+  document.getElementById('LA_CONTAINER_TODAY').textContent = data.today;
+  document.getElementById('LA_CONTAINER_TOTAL').textContent = data.total;
+});
 </script>
-<script async src="//busuanzi.9423.net/counter/textarea?id=你的站点ID&code=你的验证码"></script>
 
 // ========== 样品名称 ==========
 const SAMPLE_NAMES = ['01','02','03','04','05','06','07','08','09','10','11','12','13','14','15','16','17','18','19','20'];
