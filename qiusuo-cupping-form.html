@@ -151,7 +151,7 @@ body { background: #F5F0EB; font-family: -apple-system, "PingFang SC", "Microsof
   5. 杯测结束后，输入烘焙选手编号与样品编号的对应关系
 </div>
 
-<!-- 访问统计 -->
+<!-- 51.la 统计 -->
 <div class="stats-bar">
   <span class="today" id="todayCount">今日访问: 0</span>
   <span class="total">总访问: <span id="totalCount">0</span></span>
@@ -161,8 +161,11 @@ body { background: #F5F0EB; font-family: -apple-system, "PingFang SC", "Microsof
   求索咖啡 <a href="https://v.douyin.com/krhEueyJL5o/" target="_blank">抖音</a> · <a href="https://xhslink.com/m/2nVhPZthUPb" target="_blank">小红书</a>
 </div>
 
+<script charset="UTF-8" id="LA_COLLECT" src="//sdk.51.la/js-sdk-pro.min.js"></script>
+<script>LA.init({id:"3Q3STZKBevO6Z8CL",ck:"3Q3STZKBevO6Z8CL"})</script>
+
 <script>
-// ========== 访问统计 ==========
+// ========== 访问统计（本地兜底）==========
 function getTodayKey() {
   const d = new Date();
   return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
