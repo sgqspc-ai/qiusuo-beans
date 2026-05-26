@@ -196,6 +196,7 @@ function updateStats() {
 recordVisit();
 render();
 </script>
+<script>
 const SAMPLE_NAMES = ['01','02','03','04','05','06','07','08','09','10','11','12','13','14','15','16','17','18','19','20'];
 
 function getSampleLabel(n) {
@@ -386,13 +387,13 @@ function copyPrompt() {
 // ========== 烘焙选手绑定 ==========
 function renderRoasterGrid() {
   const grid = document.getElementById('roasterGrid');
-  
+
   // 生成下拉选项
   let optionsHtml = '<option value="">—</option>';
   for (let i = 1; i <= 20; i++) {
     optionsHtml += '<option value="' + String(i).padStart(2,'0') + '">' + String(i).padStart(2,'0') + '号</option>';
   }
-  
+
   let html = '';
   for (let i = 1; i <= currentSampleCount; i += 2) {
     const label1 = String(i).padStart(2, '0');
@@ -402,7 +403,7 @@ function renderRoasterGrid() {
             '<div class="label">' + (label2 ? '样品' + label2 : '') + '</div>' +
             '<select id="roaster-' + (i+1) + '" style="width:100%;padding:8px 10px;border:1px solid #E0D6CC;border-radius:6px;font-size:13px;color:#3C2A1E;background:#fff;">' + (label2 ? optionsHtml : '<option value="">—</option>') + '</select>';
   }
-  
+
   grid.innerHTML = html;
 }
 
@@ -414,20 +415,20 @@ function submitRoasterMapping() {
       mappings.push('样品' + String(i).padStart(2,'0') + ' → 选手' + el.value + '号');
     }
   }
-  
+
   const resultDiv = document.getElementById('roasterResult');
   if (mappings.length === 0) {
     resultDiv.innerHTML = '请至少填写一个对应关系';
     resultDiv.classList.add('show');
     return;
   }
-  
+
   const mappingText = '【烘焙选手绑定】\n' + mappings.join('\n');
   resultDiv.innerHTML = '<div style="font-size:12px;color:#2E7D32;margin-bottom:8px;">✅ 已确认绑定：</div>' +
     '<div style="background:#F8F4F0;border-radius:6px;padding:10px;font-family:monospace;font-size:12px;color:#3C2A1E;white-space:pre-wrap;line-height:1.6;">' + mappingText + '</div>' +
     '<button class="copy-btn" onclick="copyRoasterMapping(\'' + encodeURIComponent(mappingText) + '\')" style="margin-top:8px;">📋 一键复制</button>';
   resultDiv.classList.add('show');
-  
+
   localStorage.setItem('cupping_roaster_mapping', JSON.stringify(mappings));
 }
 
@@ -483,5 +484,6 @@ function getTodayKey() {
 // Init
 recordVisit();
 render();
+</script>
 </body>
 </html>
