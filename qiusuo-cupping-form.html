@@ -153,21 +153,24 @@ body { background: #F5F0EB; font-family: -apple-system, "PingFang SC", "Microsof
 
 <!-- 51.la 统计 -->
 <div class="stats-bar">
-  <span class="today">今日访问: <span id="LA_CONTAINER_TODAY">-</span></span>
-  <span class="total">总访问: <span id="LA_CONTAINER_TOTAL">-</span></span>
+  <span class="today">今日访问: <span id="51la_today">统计中…</span></span>
+  <span class="total">总访问: <span id="51la_total">统计中…</span></span>
 </div>
 
 <div style="text-align:center;margin-top:20px;padding-bottom:16px;font-size:12px;color:#8B7355;">
   求索咖啡 <a href="https://v.douyin.com/krhEueyJL5o/" target="_blank">抖音</a> · <a href="https://xhslink.com/m/2nVhPZthUPb" target="_blank">小红书</a>
 </div>
 
-<script charset="UTF-8" id="LA_COLLECT" src="//sdk.51.la/js-sdk-pro.min.js"></script>
-<script>LA.init({id:"3Q3STZKBevO6Z8CL",ck:"3Q3STZKBevO6Z8CL"})</script>
+<script charset="UTF-8" src="//sdk.51.la/js-sdk-pro.min.js"></script>
 <script>
-document.addEventListener('LA.enter', function(data) {
-  document.getElementById('LA_CONTAINER_TODAY').textContent = data.today;
-  document.getElementById('LA_CONTAINER_TOTAL').textContent = data.total;
+LA.init({id:"3Q3STZKBevO6Z8CL",ck:"3Q3STZKBevO6Z8CL"});
+var observer = new MutationObserver(function() {
+  var pv = document.querySelector('[data-l cardinality="pv"]');
+  var uv = document.querySelector('[data-l cardinality="uv"]');
+  if (pv) document.getElementById('51la_today').textContent = pv.textContent;
+  if (uv) document.getElementById('51la_total').textContent = uv.textContent;
 });
+observer.observe(document.body, {childList: true, subtree: true});
 </script>
 
 // ========== 样品名称 ==========
