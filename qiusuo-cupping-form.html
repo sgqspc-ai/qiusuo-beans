@@ -152,50 +152,14 @@ body { background: #F5F0EB; font-family: -apple-system, "PingFang SC", "Microsof
 </div>
 
 <!-- 51.la 统计 -->
-<div class="stats-bar">
-  <span class="today" id="todayCount">今日访问: 0</span>
-  <span class="total">总访问: <span id="totalCount">0</span></span>
-</div>
+<div id="LA-DATA-WIDGET" style="text-align:center;margin-top:20px;padding-bottom:16px;font-size:12px;color:#8B7355;"></div>
 
 <div style="text-align:center;margin-top:20px;padding-bottom:16px;font-size:12px;color:#8B7355;">
   求索咖啡 <a href="https://v.douyin.com/krhEueyJL5o/" target="_blank">抖音</a> · <a href="https://xhslink.com/m/2nVhPZthUPb" target="_blank">小红书</a>
 </div>
 
-<script charset="UTF-8" id="LA_COLLECT" src="//sdk.51.la/js-sdk-pro.min.js"></script>
-<script>LA.init({id:"3Q3STZKBevO6Z8CL",ck:"3Q3STZKBevO6Z8CL"})</script>
+<script crossorigin="anonymous" charset="UTF-8" src="https://v6-widget.51.la/v6/3Q3STZKBevO6Z8CL/quote.js?theme=0&col=true&f=12&badge=icon_0&icon=center&display=0,0,0,1,0,0,0,1"></script>
 
-<script>
-// ========== 访问统计（本地兜底）==========
-function getTodayKey() {
-  const d = new Date();
-  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
-}
-
-function recordVisit() {
-  const todayKey = 'cupping_visit_' + getTodayKey();
-  const totalKey = 'cupping_total';
-  let total = parseInt(localStorage.getItem(totalKey) || '0');
-  localStorage.setItem(totalKey, total + 1);
-  let todayVisited = localStorage.getItem(todayKey);
-  if (!todayVisited) {
-    let todayCount = parseInt(localStorage.getItem('cupping_today') || '0');
-    localStorage.setItem('cupping_today', todayCount + 1);
-    localStorage.setItem(todayKey, '1');
-  }
-  updateStats();
-}
-
-function updateStats() {
-  const todayCount = parseInt(localStorage.getItem('cupping_today') || '0');
-  const totalCount = parseInt(localStorage.getItem('cupping_total') || '0');
-  document.getElementById('todayCount').textContent = '今日访问: ' + todayCount;
-  document.getElementById('totalCount').textContent = totalCount;
-}
-
-// Init
-recordVisit();
-render();
-</script>
 <script>
 const SAMPLE_NAMES = ['01','02','03','04','05','06','07','08','09','10','11','12','13','14','15','16','17','18','19','20'];
 
@@ -251,6 +215,9 @@ function render() {
   container.innerHTML = html;
   renderRoasterGrid();
 }
+
+// 初始渲染
+render();
 
 function onTasterChange() {
   currentTaster = parseInt(document.getElementById('tasterSelect').value);
@@ -455,35 +422,6 @@ function copyRoasterMapping(text) {
   });
 }
 
-function recordVisit() {
-  const todayKey = 'cupping_visit_' + getTodayKey();
-  const totalKey = 'cupping_total';
-  let total = parseInt(localStorage.getItem(totalKey) || '0');
-  localStorage.setItem(totalKey, total + 1);
-  let todayVisited = localStorage.getItem(todayKey);
-  if (!todayVisited) {
-    let todayCount = parseInt(localStorage.getItem('cupping_today') || '0');
-    localStorage.setItem('cupping_today', todayCount + 1);
-    localStorage.setItem(todayKey, '1');
-  }
-  updateStats();
-}
-
-function updateStats() {
-  const todayCount = parseInt(localStorage.getItem('cupping_today') || '0');
-  const totalCount = parseInt(localStorage.getItem('cupping_total') || '0');
-  document.getElementById('todayCount').textContent = '今日访问: ' + todayCount;
-  document.getElementById('totalCount').textContent = totalCount;
-}
-
-function getTodayKey() {
-  const d = new Date();
-  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
-}
-
-// Init
-recordVisit();
-render();
 </script>
 </body>
 </html>
