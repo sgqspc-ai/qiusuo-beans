@@ -119,6 +119,7 @@ body { background: #F5F0EB; font-family: -apple-system, "PingFang SC", "Microsof
       <div class="result-header">✅ Ai提示词已生成，复制后发给Ai</div>
       <div class="report-text" id="promptText"></div>
       <button class="copy-btn" id="copyPromptBtn" onclick="copyPrompt()">📋 一键复制</button>
+      <div id="promptHint"></div>
     </div>
   </div>
   <div class="result-area" id="resultArea">
@@ -411,9 +412,15 @@ function submitRoasterMapping() {
   // ── 绑定结果展示 ──
   resultDiv.innerHTML = '<div style="font-size:12px;color:#2E7D32;margin-bottom:8px;">✅ 已确认绑定（已自动加入AI提示词）：</div>' +
     '<div style="background:#F8F4F0;border-radius:6px;padding:10px;font-family:monospace;font-size:12px;color:#3C2A1E;white-space:pre-wrap;line-height:1.6;">' + mappingText + '</div>' +
-    '<div style="margin-top:6px;font-size:11px;color:#8B7355;">直接点下方「一键复制提示词」即可发给AI</div>' +
     '<button class="copy-btn" onclick="copyRoasterMapping(\'' + encodeURIComponent(mappingText) + '\')" style="margin-top:8px;">📋 复制绑定结果</button>';
   resultDiv.classList.add('show');
+
+  // 在提示词区域加一行提示
+  const hint = document.getElementById('promptHint');
+  if (hint) {
+    hint.innerHTML = '<span style="color:#2E7D32;font-size:12px;">✅ 绑定已加入，可点「一键复制提示词」发给AI</span>';
+    setTimeout(() => { hint.innerHTML = ''; }, 5000);
+  }
 
   localStorage.setItem('cupping_roaster_mapping', JSON.stringify(mappings));
 }
