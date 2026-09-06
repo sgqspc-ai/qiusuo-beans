@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>求索杯测投票</title>
+<meta name="version" content="v0.2.0-online">
+<style>
+:root{
+  --bg:#F5F0EB; --card:#FFFFFF; --ink:#3C2A1E; --sub:#8B7355; --gold:#C9A96E;
+  --line:#E0D6CC; --good:#3E7C4F; --good-bg:#EAF3EC; --bad:#9A6A5A; --bad-bg:#F6EEEA;
+  --rank1:#C9A96E; --rank2:#B0B0B0; --rank3:#C08A5E;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{background:var(--bg);font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;color:var(--ink);min-height:100vh;}
+.wrap{max-width:520px;margin:0 auto;padding:14px 14px 96px;}
+
+/* 顶栏 */
+.top{display:flex;align-items:center;justify-content:space-between;padding:6px 2px 12px;}
+.brand{font-weight:700;font-size:16px;letter-spacing:1px;}
+.brand small{display:block;font-weight:400;font-size:11px;color:var(--sub);letter-spacing:0;}
+.mode-pill{font-size:11px;padding:3px 10px;border-radius:20px;background:#fff;border:1px solid var(--line);color:var(--sub);}
+.mode-pill.on{background:var(--good-bg);border-color:var(--good);color:var(--good);}
+.tabs{display:flex;gap:8px;margin-bottom:14px;}
+.tab{flex:1;text-align:center;padding:10px 0;border-radius:10px;background:#fff;border:1px solid var(--line);font-size:14px;color:var(--sub);cursor:pointer;font-weight:600;}
+.tab.active{background:var(--ink);color:#fff;border-color:var(--ink);}
+.hidden{display:none !important;}
+
+.card{background:var(--card);border-radius:16px;box-shadow:0 4px 16px rgba(60,42,30,0.08);padding:18px;margin-bottom:14px;}
+
+/* 管理台 */
+.admin-title{font-size:18px;font-weight:700;margin-bottom:6px;text-align:center;}
+.admin-sub{font-size:13px;color:var(--sub);text-align:center;margin-bottom:12px;line-height:1.6;}
+.count-row{display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:10px;font-size:13px;color:var(--sub);}
+.count-row select{padding:6px 14px;border:1px solid var(--line);border-radius:10px;font-size:15px;font-weight:700;color:var(--ink);background:#fff;font-family:inherit;cursor:pointer;}
+.count-note{font-size:11px;color:#B8A794;}
+.qr-box{display:flex;flex-direction:column;align-items:center;padding:12px 0;}
+.qr-box #qrBox{background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px;display:flex;align-items:center;justify-content:center;min-height:220px;min-width:220px;}
+.qr-box #qrBox canvas{width:200px;height:200px;}
+.qr-fallback{font-size:12px;color:var(--sub);text-align:center;line-height:1.8;}
+.link-row{display:flex;gap:8px;margin-top:12px;width:100%;max-width:340px;}
+.link-row input{flex:1;font-size:11px;color:var(--sub);border:1px solid var(--line);border-radius:8px;padding:8px;background:#FBFAF8;min-width:0;}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:none;border-radius:12px;padding:11px 16px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;}
+.btn-dark{background:var(--ink);color:#fff;width:100%;}
+.btn-gold{background:var(--gold);color:#fff;}
+.btn-ghost{background:#fff;border:1px solid var(--line);color:var(--ink);}
+.btn-sm{padding:8px 12px;font-size:12px;border-radius:9px;}
+.btn:active{opacity:0.85;}
+.btn:disabled{opacity:0.45;cursor:not-allowed;}
+.btnrow{display:flex;gap:10px;margin-top:14px;}
+.btnrow .btn{flex:1;}
+
+/* 投票 */
+.progress-wrap{margin-bottom:12px;}
+.progress-top{display:flex;justify-content:space-between;font-size:12px;color:var(--sub);margin-bottom:6px;}
+.progress-bar{height:8px;background:#EAE2D8;border-radius:6px;overflow:hidden;}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--ink));border-radius:6px;transition:width .3s;}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 16px;}
+.chip{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;background:#fff;border:1.5px solid var(--line);color:var(--sub);cursor:pointer;}
+.chip.done{background:var(--ink);border-color:var(--ink);color:#fff;}
+.chip.cur{outline:2px solid var(--gold);outline-offset:1px;}
+.vote-card{background:var(--card);border-radius:20px;box-shadow:0 6px 24px rgba(60,42,30,0.10);padding:30px 22px 26px;text-align:center;margin-bottom:14px;}
+.sample-label{font-size:13px;color:var(--sub);letter-spacing:2px;}
+.sample-no{font-size:52px;font-weight:800;margin:10px 0 4px;letter-spacing:2px;}
+.sample-hint{font-size:12px;color:var(--sub);margin-bottom:26px;}
+.vote-btns{display:flex;gap:12px;}
+.vote-btn{flex:1;border:none;border-radius:16px;padding:22px 10px;font-size:17px;font-weight:700;cursor:pointer;font-family:inherit;transition:transform .05s;}
+.vote-btn:active{transform:scale(0.96);}
+.vote-btn.like{background:var(--good-bg);color:var(--good);border:2px solid var(--good);}
+.vote-btn.dislike{background:var(--bad-bg);color:var(--bad);border:2px solid var(--bad);}
+.vote-btn .ico{display:block;font-size:30px;margin-bottom:6px;}
+.auto-next{font-size:11px;color:var(--sub);margin-top:12px;}
+
+/* 提交浮层 */
+.submit-bar{position:fixed;left:0;right:0;bottom:0;background:#fff;box-shadow:0 -4px 20px rgba(60,42,30,0.10);padding:10px 16px calc(10px + env(safe-area-inset-bottom));}
+.submit-inner{max-width:520px;margin:0 auto;display:flex;align-items:center;gap:12px;}
+.submit-count{font-size:13px;color:var(--sub);white-space:nowrap;}
+.submit-count b{color:var(--ink);}
+.submit-btn{flex:1;background:var(--ink);color:#fff;border:none;border-radius:12px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;}
+.submit-btn:disabled{opacity:0.4;}
+.submit-btn.ok{background:var(--good);}
+
+/* 榜单 */
+.board-head{font-size:13px;color:var(--sub);text-align:center;margin-bottom:12px;line-height:1.7;}
+.rank-item{display:flex;align-items:center;gap:10px;background:#fff;border-radius:12px;padding:12px 14px;margin-bottom:8px;box-shadow:0 2px 8px rgba(60,42,30,0.06);}
+.rank-pos{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;flex-shrink:0;}
+.rank-pos.top1{background:var(--rank1);color:#fff;}
+.rank-pos.top2{background:var(--rank2);color:#fff;}
+.rank-pos.top3{background:var(--rank3);color:#fff;}
+.rank-pos.normal{background:#F1EAE0;color:var(--sub);}
+.rank-main{flex:1;min-width:0;}
+.rank-name{font-size:15px;font-weight:700;}
+.rank-bar{height:6px;background:#EFE7DC;border-radius:4px;margin-top:6px;overflow:hidden;}
+.rank-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--ink));border-radius:4px;}
+.rank-nums{text-align:right;flex-shrink:0;}
+.rank-likes{font-size:17px;font-weight:800;color:var(--good);}
+.rank-likes small{font-size:10px;color:var(--sub);font-weight:400;}
+.rank-dislikes{font-size:11px;color:var(--sub);margin-top:2px;}
+.empty{text-align:center;padding:44px 20px;color:var(--sub);font-size:14px;line-height:1.8;}
+
+/* 感谢 */
+.done-ico{font-size:64px;text-align:center;margin:30px 0 6px;}
+.done-title{font-size:20px;font-weight:800;text-align:center;margin-bottom:8px;}
+.done-sub{font-size:13px;color:var(--sub);text-align:center;line-height:1.7;margin-bottom:26px;}
+
+/* 提示条 */
+.toast{position:fixed;top:14px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;font-size:13px;padding:10px 18px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,0.2);z-index:99;opacity:0;pointer-events:none;transition:opacity .25s;white-space:nowrap;max-width:90vw;overflow:hidden;text-overflow:ellipsis;}
+.toast.show{opacity:1;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="top">
+    <div class="brand">求索杯测投票<small>喜欢 = 1分 · 不喜欢 = 0分</small></div>
+    <span class="mode-pill" id="modePill">连接中</span>
+  </div>
+
+  <!-- 管理员台：无 s 参数进入 -->
+  <div id="view-home" class="hidden">
+    <div class="card">
+      <div class="admin-title">☕ 本轮投票二维码</div>
+      <div class="admin-sub">把下面的码给客人扫<br>每人给每个样品投 <b>喜欢 / 不喜欢</b>，提交前可改</div>
+      <div class="count-row">
+        <span>样品数量</span>
+        <select id="countSel" onchange="onCountChange()"></select>
+        <span class="count-note">1 ~ 30 可选</span>
+      </div>
+      <div class="qr-box">
+        <div id="qrBox"></div>
+        <div class="link-row">
+          <input id="voteLink" readonly onclick="this.select()">
+          <button class="btn btn-ghost btn-sm" onclick="copyLink()">复制</button>
+        </div>
+      </div>
+      <div class="btnrow">
+        <button class="btn btn-ghost" onclick="goVote()">去投票</button>
+        <button class="btn btn-gold" onclick="showBoard()">看榜单</button>
+      </div>
+      <div class="btnrow">
+        <button class="btn btn-ghost btn-sm" style="width:100%" onclick="newRound()">🔄 开新一轮（生成新二维码）</button>
+      </div>
+    </div>
+    <div class="card" id="demoToolsCard">
+      <div class="admin-title" style="font-size:15px">演示工具</div>
+      <div class="btnrow">
+        <button class="btn btn-ghost btn-sm" onclick="seedDemo()">填充演示投票数据</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 投票视图 -->
+  <div id="view-vote" class="hidden">
+    <div class="progress-wrap">
+      <div class="progress-top"><span id="progText">已投 0/20</span><span id="voteSessionTag"></span></div>
+      <div class="progress-bar"><div class="progress-fill" id="progFill" style="width:0%"></div></div>
+    </div>
+    <div class="chips" id="chips"></div>
+    <div class="vote-card" id="voteCard"></div>
+  </div>
+
+  <!-- 榜单视图 -->
+  <div id="view-board" class="hidden">
+    <div class="board-head" id="boardHead"></div>
+    <div id="boardList"></div>
+  </div>
+
+  <!-- 已投感谢 -->
+  <div id="view-done" class="hidden">
+    <div class="card">
+      <div class="done-ico">✅</div>
+      <div class="done-title">投票已提交</div>
+      <div class="done-sub">感谢参与！<br>你的每一票都在帮我们选出这轮最受欢迎的豆子</div>
+      <button class="btn btn-dark" onclick="showBoard()">查看实时榜单</button>
+    </div>
+  </div>
+
+</div>
+
+<div class="submit-bar hidden" id="submitBar">
+  <div class="submit-inner">
+    <div class="submit-count">已投 <b id="doneCount">0</b>/<span id="totalCount">20</span></div>
+    <button class="submit-btn" id="submitBtn" onclick="submitVote()">提交投票</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- ===== 配置区 ===== -->
+<script>
+/* 样品数量：默认 20，可改 1~30 */
+var SAMPLE_COUNT = 20;
+/* Supabase 配置：注册后把 URL 和 anon key 填进来，留空 = 演示模式（数据只存本机） */
+var SUPABASE_URL = "https://ucweqaaaclpucgxbvajw.supabase.co";
+var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
+/* 二维码库（尽力加载，失败不阻塞投票） */
+</script>
+
+<!-- ===== 逻辑区 ===== -->
+<script>
+(function(){
+  "use strict";
+  var LS_VOTER = "cv_voter";
+  var DEMO_KEY_PREFIX = "cv_demo_";
+
+  var params = new URLSearchParams(location.search);
+  var sessionId = (params.get("s")||"").trim();
+
+  /* 样品数量：URL ?n= 优先，其次上次选择，最后用配置默认（范围 1~30） */
+  var LS_COUNT = "cv_count";
+  var N;
+  var urlN = parseInt(params.get("n"), 10);
+  if(urlN >= 1 && urlN <= 30){
+    N = urlN;
+  } else {
+    var savedN = parseInt(localStorage.getItem(LS_COUNT) || "0", 10);
+    if(savedN >= 1 && savedN <= 30){ N = savedN; }
+    else { N = Math.min(Math.max(parseInt(SAMPLE_COUNT,10)||20,1),30); }
+  }
+  localStorage.setItem(LS_COUNT, String(N));
+
+  var voterId = localStorage.getItem(LS_VOTER);
+  if(!voterId){ voterId = genId(); localStorage.setItem(LS_VOTER, voterId); }
+
+  var isDemo = !(SUPABASE_URL && SUPABASE_ANON_KEY);
+  var choices = loadDraft(); /* null|array length N, items: 1|0|null */
+
+  /* ---------- 小工具 ---------- */
+  function genId(){
+    if(window.crypto && crypto.randomUUID) return "v" + crypto.randomUUID().replace(/-/g,"").slice(0,14);
+    return "v" + Date.now().toString(36) + Math.random().toString(36).slice(2,10);
+  }
+  function genSession(){
+    return "s" + Date.now().toString(36).slice(-4) + Math.random().toString(36).slice(2,8);
+  }
+  function $(id){ return document.getElementById(id); }
+  function esc(s){ return String(s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c];}); }
+  function pad2(n){ return n<10 ? "0"+n : ""+n; }
+  function toast(msg){
+    var t = $("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    clearTimeout(t._timer);
+    t._timer = setTimeout(function(){ t.classList.remove("show"); }, 2200);
+  }
+  function draftKey(){ return "cv_draft_" + sessionId; }
+  function submittedKey(){ return "cv_sub_" + sessionId; }
+  function loadDraft(){
+    try{
+      var raw = localStorage.getItem(draftKey());
+      if(!raw) return null;
+      var arr = JSON.parse(raw);
+      if(Array.isArray(arr) && arr.length === N) return arr;
+    }catch(e){}
+    return null;
+  }
+  function saveDraft(){
+    if(choices) localStorage.setItem(draftKey(), JSON.stringify(choices));
+  }
+  function doneCount(){
+    var c = 0;
+    if(choices){ for(var i=0;i<N;i++){ if(choices[i]===1 || choices[i]===0) c++; } }
+    return c;
+  }
+
+  /* ---------- 后端抽象 ---------- */
+  /* 网络抖动自动重试：业务错误(409等)不重试，网络错误/5xx 最多重试 tries 次 */
+  function retryFetch(fn, tries){
+    var delay = 800;
+    function attempt(left){
+      return fn().catch(function(err){
+        var st = err && err.status;
+        if(st === 409 || st === 401 || st === 403 || st === 404) throw err;
+        if(left <= 1) throw err;
+        return new Promise(function(res){ setTimeout(res, delay); }).then(function(){ return attempt(left - 1); });
+      });
+    }
+    return attempt(tries);
+  }
+  function apiGet(url){
+    return retryFetch(function(){
+      return fetch(url, { headers: { "apikey": SUPABASE_ANON_KEY, "Authorization": "Bearer " + SUPABASE_ANON_KEY } }).then(function(r){
+        if(!r.ok){ var e = new Error("GET " + r.status); e.status = r.status; throw e; }
+        return r.json();
+      });
+    }, 2);
+  }
+  function apiPost(url, body){
+    return retryFetch(function(){
+      return fetch(url, { method: "POST", headers: {
+        "apikey": SUPABASE_ANON_KEY, "Authorization": "Bearer " + SUPABASE_ANON_KEY,
+        "Content-Type": "application/json", "Prefer": "return=minimal"
+      }, body: JSON.stringify(body) }).then(function(r){
+        if(!r.ok){ var e = new Error("POST " + r.status); e.status = r.status; throw e; }
+        return r;
+      });
+    }, 3);
+  }
+  function demoRows(){
+    var key = DEMO_KEY_PREFIX + sessionId;
+    try{ var arr = JSON.parse(localStorage.getItem(key) || "[]"); return Array.isArray(arr)?arr:[]; }catch(e){ return []; }
+  }
+  function saveDemoRows(rows){
+    localStorage.setItem(DEMO_KEY_PREFIX + sessionId, JSON.stringify(rows));
+  }
+  function fetchAllVotes(){
+    if(isDemo) return Promise.resolve(demoRows());
+    return apiGet(SUPABASE_URL + "/rest/v1/votes?select=voter_id,choices&session_id=eq." + encodeURIComponent(sessionId) + "&limit=2000");
+  }
+  function fetchMyVote(){
+    if(isDemo){
+      var rows = demoRows();
+      var mine = rows.filter(function(r){ return r.voter_id === voterId; });
+      return Promise.resolve(mine.length ? mine[0] : null);
+    }
+    return apiGet(SUPABASE_URL + "/rest/v1/votes?select=voter_id&session_id=eq." + encodeURIComponent(sessionId) + "&voter_id=eq." + encodeURIComponent(voterId) + "&limit=1").then(function(rows){ return rows.length ? rows[0] : null; });
+  }
+  function insertVote(){
+    if(isDemo){
+      var rows = demoRows();
+      rows.push({ voter_id: voterId, choices: choices.slice(), created_at: new Date().toISOString() });
+      saveDemoRows(rows);
+      return Promise.resolve();
+    }
+    return apiPost(SUPABASE_URL + "/rest/v1/votes", [{ session_id: sessionId, voter_id: voterId, choices: choices }]);
+  }
+
+  /* ---------- 视图切换 ---------- */
+  function showView(name){
+    ["view-home","view-vote","view-board","view-done"].forEach(function(v){ $(v).classList.add("hidden"); });
+    $(name).classList.remove("hidden");
+    var voteTab = $("tabVote"), boardTab = $("tabBoard");
+    if(voteTab){ voteTab.classList.toggle("active", name === "view-vote" || name === "view-done"); }
+    if(boardTab){ boardTab.classList.toggle("active", name === "view-board"); }
+    if(name === "view-board") refreshBoard();
+  }
+
+  /* ---------- 顶栏 tab ---------- */
+  var topHtml = document.querySelector(".top");
+  function ensureTabs(){
+    if($("tabVote")) return;
+    var d = document.createElement("div");
+    d.className = "tabs";
+    d.innerHTML = '<div class="tab" id="tabVote" onclick="Tab.vote()">投票</div><div class="tab" id="tabBoard" onclick="Tab.board()">榜单</div>';
+    topHtml.after(d);
+  }
+
+  /* ---------- 首页：管理员台 ---------- */
+  function fillCountSel(){
+    var sel = $("countSel");
+    if(!sel) return;
+    sel.innerHTML = "";
+    for(var i=1;i<=30;i++){
+      var o = document.createElement("option");
+      o.value = String(i);
+      o.textContent = "样品 " + i + " 个";
+      if(i === N) o.selected = true;
+      sel.appendChild(o);
+    }
+  }
+  function renderHome(){
+    showView("view-home");
+    fillCountSel();
+    var link = location.origin + location.pathname + "?s=" + sessionId + "&n=" + N;
+    $("voteLink").value = link;
+    drawQr(link);
+    var mode = $("modePill");
+    if(isDemo){
+      mode.textContent = "演示模式";
+      mode.classList.remove("on");
+      $("demoToolsCard").classList.remove("hidden");
+    } else {
+      mode.textContent = "在线";
+      mode.classList.add("on");
+      $("demoToolsCard").classList.add("hidden");
+    }
+  }
+  function drawQr(text){
+    var box = $("qrBox");
+    box.innerHTML = "";
+    if(window.QRCode){
+      try{
+        new QRCode(box, { text: text, width: 200, height: 200, correctLevel: QRCode.CorrectLevel.M });
+        return;
+      }catch(e){ console.warn(e); }
+    }
+    box.innerHTML = '<div class="qr-fallback">二维码库加载失败<br>请用上方链接</div>';
+  }
+  function copyLink(){
+    var inp = $("voteLink");
+    inp.select();
+    var ok = false;
+    try{ ok = document.execCommand("copy"); }catch(e){}
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(inp.value).then(function(){ toast("链接已复制"); }, function(){ toast(ok?"链接已复制":"复制失败，请长按链接手动复制"); });
+    } else {
+      toast(ok ? "链接已复制" : "复制失败，请长按链接手动复制");
+    }
+  }
+  function newRound(){
+    if(!confirm("确定开新一轮？\n当前轮的投票数据会保留，新客人扫新码进入新一轮，榜单互不影响。")) return;
+    sessionId = genSession();
+    history.replaceState(null, "", "?s=" + sessionId + "&n=" + N);
+    choices = null;
+    localStorage.removeItem(draftKey());
+    renderHome();
+    toast("新一轮已开启");
+  }
+  function onCountChange(){
+    var v = parseInt($("countSel").value, 10);
+    if(!(v >= 1 && v <= 30) || v === N) return;
+    N = v;
+    localStorage.setItem(LS_COUNT, String(N));
+    sessionId = genSession();
+    history.replaceState(null, "", "?s=" + sessionId + "&n=" + N);
+    choices = null;
+    localStorage.removeItem(draftKey());
+    renderHome();
+    toast("已用 " + N + " 个样品开启新一轮");
+  }
+  function seedDemo(){
+    if(!isDemo) return;
+    var names = [genId(), genId(), genId()];
+    names.forEach(function(vid, idx){
+      var arr = [];
+      for(var i=0;i<N;i++){
+        /* 模拟真实梯度：样品越靠前越多人喜欢，带一点随机波动 */
+        var base = 0.85 - (i / N) * 0.75;
+        var wave = ((idx * 7 + i * 3) % 5) / 20;
+        arr.push(Math.random() < base + wave ? 1 : 0);
+      }
+      var rows = demoRows();
+      rows.push({ voter_id: vid, choices: arr, created_at: new Date().toISOString() });
+      saveDemoRows(rows);
+    });
+    toast("已填充 3 位演示投票");
+    if(!$("view-board").classList.contains("hidden")) refreshBoard();
+  }
+
+  /* ---------- 投票 ---------- */
+  var curIdx = 0;
+  function renderVote(){
+    showView("view-vote");
+    if(!choices){ choices = new Array(N).fill(null); saveDraft(); }
+    curIdx = 0;
+    for(var i=0;i<N;i++){ if(choices[i]===null){ curIdx = i; break; } }
+    renderChips();
+    renderCur();
+    updateBar();
+    $("submitBar").classList.remove("hidden");
+  }
+  function renderChips(){
+    var box = $("chips");
+    var html = "";
+    for(var i=0;i<N;i++){
+      var cls = "chip";
+      if(choices && (choices[i]===1||choices[i]===0)) cls += " done";
+      if(i===curIdx) cls += " cur";
+      html += '<div class="'+cls+'" onclick="Vote.jump('+i+')">'+pad2(i+1)+'</div>';
+    }
+    box.innerHTML = html;
+  }
+  function renderCur(){
+    var card = $("voteCard");
+    if(curIdx >= N){
+      card.innerHTML = '<div class="sample-label">全部投完啦</div><div class="sample-no" style="font-size:34px">🎉</div><div class="sample-hint">检查一下有没有要改的，确认后点下方「提交投票」<br>提交后不能再改</div>';
+      return;
+    }
+    var done = doneCount();
+    card.innerHTML =
+      '<div class="sample-label">样品 ' + pad2(curIdx+1) + ' / ' + N + '</div>' +
+      '<div class="sample-no">' + pad2(curIdx+1) + '</div>' +
+      '<div class="sample-hint">已投 ' + done + ' / ' + N + ' · 提交前可随时点上方编号修改</div>' +
+      '<div class="vote-btns">' +
+        '<button class="vote-btn like" onclick="Vote.pick(1)"><span class="ico">👍</span>喜欢</button>' +
+        '<button class="vote-btn dislike" onclick="Vote.pick(0)"><span class="ico">👎</span>不喜欢</button>' +
+      '</div>' +
+      '<div class="auto-next">选完自动跳到下一个</div>';
+  }
+  function updateBar(){
+    var d = doneCount();
+    $("progText").textContent = "已投 " + d + "/" + N;
+    $("progFill").style.width = (d/N*100) + "%";
+    $("doneCount").textContent = d;
+    $("totalCount").textContent = N;
+    var btn = $("submitBtn");
+    btn.classList.toggle("ok", d === N);
+    btn.disabled = d === 0;
+  }
+  function pick(val){
+    if(curIdx >= N) return;
+    choices[curIdx] = val;
+    saveDraft();
+    var next = curIdx + 1;
+    while(next < N && choices[next] !== null) next++;
+    curIdx = next >= N ? N : next;
+    renderChips();
+    renderCur();
+    updateBar();
+    if(curIdx >= N) toast("全部投完，检查后提交");
+  }
+  function jump(i){
+    if(i<0 || i>=N) return;
+    curIdx = i;
+    renderChips();
+    renderCur();
+  }
+  function goVote(){ renderVote(); }
+  function submitVote(){
+    var missing = N - doneCount();
+    if(missing > 0){
+      if(!confirm("还有 " + missing + " 个样品没投（不计分）。\n确定现在提交吗？")) return;
+    } else {
+      if(!confirm("提交后不能再修改，确定提交吗？")) return;
+    }
+    var btn = $("submitBtn");
+    btn.disabled = true;
+    btn.textContent = "提交中…";
+    fetchMyVote().then(function(existing){
+      if(existing){
+        localStorage.setItem(submittedKey(), "1");
+        toast("你在这轮已经投过啦");
+        showDone();
+        return;
+      }
+      return insertVote().then(function(){
+        localStorage.setItem(submittedKey(), "1");
+        localStorage.removeItem(draftKey());
+        showDone();
+      });
+    }).catch(function(err){
+      btn.disabled = false;
+      btn.textContent = "提交投票";
+      var status = err && err.status;
+      var msg = String(err && err.message || err);
+      if(status === 409 || msg.indexOf("23505") >= 0){
+        localStorage.setItem(submittedKey(), "1");
+        toast("你在这轮已经投过啦");
+        showDone();
+      } else {
+        toast("提交失败，请检查网络后重试");
+      }
+      console.error(err);
+    });
+  }
+  function showDone(){
+    $("submitBar").classList.add("hidden");
+    showView("view-done");
+  }
+
+  /* ---------- 榜单 ---------- */
+  var boardTimer = null;
+  function showBoard(){
+    $("submitBar").classList.add("hidden");
+    showView("view-board");
+    clearInterval(boardTimer);
+    boardTimer = setInterval(function(){ if(!$("view-board").classList.contains("hidden")) refreshBoard(); }, 5000);
+  }
+  function refreshBoard(){
+    fetchAllVotes().then(function(rows){
+      renderBoard(rows || []);
+    }).catch(function(err){
+      $("boardHead").textContent = "榜单加载失败，检查网络后下拉重试";
+      console.error(err);
+    });
+  }
+  function renderBoard(rows){
+    var participants = rows.length;
+    var likes = new Array(N).fill(0);
+    var dislikes = new Array(N).fill(0);
+    rows.forEach(function(r){
+      var c = r.choices;
+      if(!Array.isArray(c)) return;
+      for(var i=0;i<N && i<c.length;i++){
+        if(c[i]===1) likes[i]++;
+        else if(c[i]===0) dislikes[i]++;
+      }
+    });
+    $("boardHead").innerHTML = '本轮 <b>' + esc(sessionId) + '</b> · ' + participants + ' 人已投<br>分数 = 喜欢票数（喜欢1分 / 不喜欢0分）';
+    var list = [];
+    for(var i=0;i<N;i++){ list.push({ idx:i, likes:likes[i], dislikes:dislikes[i] }); }
+    list.sort(function(a,b){ return b.likes - a.likes || a.idx - b.idx; });
+    if(participants === 0){
+      $("boardList").innerHTML = '<div class="empty">还没有人投票<br>先投出你的第一票吧 ☕</div>';
+      return;
+    }
+    var html = "";
+    var lastLikes = -1, rank = 0;
+    for(var k=0;k<list.length;k++){
+      var it = list[k];
+      if(it.likes !== lastLikes){ rank = k + 1; lastLikes = it.likes; }
+      var cls = "normal";
+      if(rank===1) cls="top1"; else if(rank===2) cls="top2"; else if(rank===3) cls="top3";
+      var maxLikes = list[0].likes || 1;
+      var pct = (it.likes / maxLikes * 100) + "%";
+      html += '<div class="rank-item">' +
+        '<div class="rank-pos '+cls+'">' + (rank===1?"🥇":rank===2?"🥈":rank===3?"🥉":rank) + '</div>' +
+        '<div class="rank-main"><div class="rank-name">样品 ' + pad2(it.idx+1) + '</div>' +
+        '<div class="rank-bar"><div class="rank-fill" style="width:'+pct+'"></div></div></div>' +
+        '<div class="rank-nums"><div class="rank-likes">' + it.likes + ' <small>喜欢</small></div>' +
+        '<div class="rank-dislikes">👎 ' + it.dislikes + '</div></div>' +
+      '</div>';
+    }
+    $("boardList").innerHTML = html;
+  }
+
+  /* ---------- 已投检查 & 启动 ---------- */
+  function boot(){
+    ensureTabs();
+    var pill = $("modePill");
+    pill.textContent = isDemo ? "演示模式" : "连接中…";
+    if(localStorage.getItem(submittedKey())){
+      fetchMyVote().then(function(existing){
+        if(existing || isDemo){
+          showDone();
+        } else {
+          localStorage.removeItem(submittedKey());
+          renderVote();
+        }
+      }).catch(function(){ showDone(); });
+      return;
+    }
+    if(!sessionId){
+      /* 管理员入口：无 s 自动开一轮 */
+      sessionId = genSession();
+      history.replaceState(null, "", "?s=" + sessionId + "&n=" + N);
+      choices = null;
+      renderHome();
+      return;
+    }
+    renderVote();
+  }
+
+  window.Tab = {
+    vote: function(){ clearInterval(boardTimer); renderVote(); },
+    board: function(){ showBoard(); }
+  };
+  window.Vote = { pick: pick, jump: jump };
+  window.seedDemo = seedDemo;
+  window.copyLink = copyLink;
+  window.newRound = newRound;
+  window.onCountChange = onCountChange;
+  window.goVote = goVote;
+  window.showBoard = showBoard;
+  window.submitVote = submitVote;
+
+  if(document.readyState === "loading"){
+    document.addEventListener("DOMContentLoaded", boot);
+  } else {
+    boot();
+  }
+})();
+</script>
+
+<!-- qrcode 库：同目录本地优先（与页面同源，稳），失败再试 CDN -->
+<script>
+function loadQrFallback(){
+  var s = document.createElement("script");
+  s.src = "https://unpkg.com/qrcodejs@1.0.0/qrcode.min.js";
+  s.onerror = function(){ console.warn("qrcode lib unavailable"); };
+  document.head.appendChild(s);
+}
+</script>
+<script src="qrcode.min.js" onerror="loadQrFallback()"></script>
+
+</body>
+</html>
