@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>求索杯测盲评</title>
-<meta name="version" content="v0.2.5-lockfreq">
+<meta name="version" content="v0.2.6-updatetime">
 <style>
 :root{
   --bg:#F5F0EB; --card:#FFFFFF; --ink:#3C2A1E; --sub:#8B7355; --gold:#C9A96E;
@@ -733,6 +733,13 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
     refreshBusy=true;
     return renderResultFor(sessionId, $("resultList"), $("resultHead")).then(function(){ refreshBusy=false; }, function(){ refreshBusy=false; });
   }
+  /* 刷新成功后显示更新时间 */
+  function markUpdated(headEl){
+    if(!headEl) return;
+    var d = new Date();
+    var p = function(x){ return (x<10?"0":"") + x; };
+    headEl.innerHTML += '<div style="font-size:10px;color:#B8A794;margin-top:5px;">更新于 ' + p(d.getHours()) + ":" + p(d.getMinutes()) + ":" + p(d.getSeconds()) + '</div>';
+  }
   function renderResultFor(sid, listEl, headEl){
     var myId = ++resultReqId;
     listEl.innerHTML='<div class="empty">加载中…</div>';
@@ -747,6 +754,7 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
       else if(curResultData && typeof curResultData.locked === "boolean"){ locked=curResultData.locked; }
       else { locked=false; }
       renderResultInto(listEl, headEl, entries, mapping, sid, locked);
+      markUpdated(headEl);
     }).catch(function(err){
       if(myId !== resultReqId) return;
       headEl.textContent="加载失败，请检查网络后重试";
