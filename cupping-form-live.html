@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>求索杯测盲评</title>
-<meta name="version" content="v0.2.2-bindfix">
+<meta name="version" content="v0.2.3-histmap">
 <style>
 :root{
   --bg:#F5F0EB; --card:#FFFFFF; --ink:#3C2A1E; --sub:#8B7355; --gold:#C9A96E;
@@ -708,6 +708,12 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
     });
     var headPrefix=(sid===sessionId)?('本轮 <b>'+esc(sid)+'</b>'):('📜 <b>'+esc(sid)+'</b>');
     headEl.innerHTML=headPrefix+'<br>'+calc.nTasters+' / 8 人已提交<div class="who-list">'+whoHtml+'</div>';
+    if(mapping&&Array.isArray(mapping)&&mapping.length){
+      var binds=mapping.map(function(m){
+        return '<span class="who-pill ok" style="margin-top:2px">样品'+m.sample+' → 选手'+m.roaster+'号</span>';
+      }).join('');
+      headEl.innerHTML+='<div class="who-list" style="margin-top:4px">'+binds+'</div>';
+    }
     if(entries.length===0){
       listEl.innerHTML='<div class="empty">还没有人提交<br>让杯测员扫二维码开始评分吧</div>';
       return;
@@ -724,7 +730,7 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
       var pct=(comp/maxV*100)+"%";
       html+='<div class="rank-item">'+
         '<div class="rank-pos '+cls+'">'+(rank===1?"🥇":rank===2?"🥈":rank===3?"🥉":rank)+'</div>'+
-        '<div class="rank-main"><div class="rank-name">'+labelFor(sid,mapping,idx)+(mapping?'':' <small>'+esc("样品"+pad2(idx+1))+'</small>')+'</div>'+
+        '<div class="rank-main"><div class="rank-name">'+labelFor(sid,mapping,idx)+' <small>样品'+pad2(idx+1)+'</small></div>'+
         '<div class="rank-bar"><div class="rank-fill" style="width:'+pct+'"></div></div></div>'+
         '<div class="rank-nums"><div class="rank-score">'+round1(comp)+' <small>综合分</small></div>'+
         '<div class="rank-overall">整体原始均分 '+round1(ps.rawOverallAvg)+'</div></div></div>';
