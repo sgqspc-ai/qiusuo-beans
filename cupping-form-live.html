@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>求索杯测盲评</title>
-<meta name="version" content="v0.2.1-sizefix">
+<meta name="version" content="v0.2.2-bindfix">
 <style>
 :root{
   --bg:#F5F0EB; --card:#FFFFFF; --ink:#3C2A1E; --sub:#8B7355; --gold:#C9A96E;
@@ -790,8 +790,13 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
     var card=$("bindCard");
     if(sid!==sessionId){ card.classList.add("hidden"); return; }
     var grid=$("bindGrid");
-    var html="";
     var Ncur=curResultData&&curResultData.calc&&curResultData.calc.perSample?curResultData.calc.perSample.length:N;
+    /* 防刷新打断：grid 已渲染且样品数没变且 mapping 没变 → 不重建，保住正在编辑的下拉选择 */
+    if(grid.hasChildNodes() && String(grid.dataset.n)===String(Ncur) && (grid.dataset.map||"")===JSON.stringify(mapping||[])){
+      card.classList.remove("hidden");
+      return;
+    }
+    var html="";
     for(var i=0;i<Ncur;i++){
       var key=String(i+1).padStart(2,"0");
       var cur="";
@@ -801,14 +806,17 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
       html+='<div class="bind-row"><span>样品'+key+'</span><select id="bind-'+key+'">'+opts+'</select></div>';
     }
     grid.innerHTML=html;
+    grid.dataset.n=String(Ncur);
+    grid.dataset.map=JSON.stringify(mapping||[]);
     card.classList.remove("hidden");
   }
   function saveMapping(){
     var map=[];
-    for(var i=0;i<N;i++){
+    var grid=$("bindGrid");
+    var selects=grid?grid.querySelectorAll("select"):[];
+    for(var i=0;i<selects.length;i++){
       var key=String(i+1).padStart(2,"0");
-      var el=$("bind-"+key);
-      if(el&&el.value) map.push({sample:key,roaster:el.value});
+      if(selects[i].value) map.push({sample:key,roaster:selects[i].value});
     }
     saveMappingApi(map).then(function(){
       toast("绑定已保存 ✅");
