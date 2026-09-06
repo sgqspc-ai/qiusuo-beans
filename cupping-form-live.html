@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>求索杯测盲评</title>
-<meta name="version" content="v0.2.3-histmap">
+<meta name="version" content="v0.2.4-tasterhint">
 <style>
 :root{
   --bg:#F5F0EB; --card:#FFFFFF; --ink:#3C2A1E; --sub:#8B7355; --gold:#C9A96E;
@@ -190,7 +190,8 @@ body{background:var(--bg);font-family:-apple-system,"PingFang SC","Microsoft YaH
     <div class="result-head" id="resultHead"></div>
     <div id="resultList"></div>
     <div class="btnrow">
-      <button class="btn btn-ghost btn-sm" style="width:100%" onclick="copySummary()">📋 复制汇总文本</button>
+      <button class="btn btn-ghost btn-sm" onclick="copySummary()">📋 复制汇总文本</button>
+      <button class="btn btn-ghost btn-sm" onclick="copyMissingList()">⏰ 复制未提交名单</button>
     </div>
     <div class="card hidden" id="bindCard">
       <div class="bind-title">🏆 样品 → 烘焙选手 绑定（比赛结果宣布用）</div>
@@ -476,7 +477,7 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
     if(curTaster!==t){ curTaster=t; samples=null; }
     if(!samples){ var d=loadDraft(t); samples=d||blankSamples(N); if(!d) saveDraft(t,samples); }
     sel.value=t;
-    updateSubState();
+    checkTasterState();
     renderCards();
     updateBar();
     $("submitBar").classList.remove("hidden");
@@ -488,13 +489,36 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
     samples=null;
     renderFormView();
   }
-  function updateSubState(){
-    var el=$("subState");
-    if(localStorage.getItem(subKey(curTaster))){
-      el.textContent="已提交 ✅";
-    } else {
-      el.textContent="";
+  /* B2：切换杯测员编号时提示占用（他人已提交 / 自己已提交 / 可用） */
+  var lastCheckedTaster = "";
+  function checkTasterState(){
+    var t = curTaster;
+    var el = $("subState");
+    if(!el) return;
+    el.style.color = "";
+    if(localStorage.getItem(subKey(t))){
+      el.textContent = "你已用 杯测员" + t + " 提交 ✅";
+      lastCheckedTaster = t;
+      return;
     }
+    if(lastCheckedTaster === t && el.dataset.t === t) return; /* 已查过同编号，不重复请求 */
+    el.dataset.t = t;
+    el.textContent = "检查中…";
+    fetchMyEntry(t).then(function(ex){
+      if(t !== curTaster) return;
+      lastCheckedTaster = t;
+      if(ex){
+        el.textContent = "⚠ 杯测员 " + t + " 已被提交占用，请换个编号（管理员可删除后重填）";
+        el.style.color = "#B4432E";
+      } else {
+        el.textContent = "该编号可用 ✓";
+        setTimeout(function(){ if(t === curTaster && el.dataset.t === t) el.textContent = ""; }, 2000);
+      }
+    }).catch(function(){
+      if(t !== curTaster) return;
+      lastCheckedTaster = t;
+      el.textContent = "";
+    });
   }
   function sampleDone(s){
     var sc=s.scores;
@@ -791,6 +815,25 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
     try{ document.execCommand("copy"); toast("已复制"); }catch(e){ toast("复制失败"); }
     document.body.removeChild(ta);
   }
+  /* B4：复制未提交名单（催人用） */
+  function buildMissingListText(){
+    if(!curResultData) return "";
+    var done={};
+    (curResultData.entries||[]).forEach(function(e){ done[e.taster_id]=1; });
+    var missing=TASTERS.filter(function(t){ return !done[t]; });
+    var lines=[];
+    lines.push("【求索杯测提醒】本场共 8 位杯测员，"+(missing.length?("还有 "+missing.length+" 人未提交：")+"\n"+missing.map(function(t){return "杯测员 "+t;}).join("、") : "已全部提交 ✅"));
+    lines.push("提交入口："+location.origin+location.pathname+"?s="+sessionId+"&n="+N);
+    return lines.join("\n");
+  }
+  function copyMissingList(){
+    var text=buildMissingListText();
+    if(!text){ toast("先打开结果页再复制"); return; }
+    var ta=document.createElement("textarea"); ta.value=text; ta.style.position="fixed"; ta.style.opacity="0";
+    document.body.appendChild(ta); ta.select();
+    try{ document.execCommand("copy"); toast("已复制催名单"); }catch(e){ toast("复制失败"); }
+    document.body.removeChild(ta);
+  }
   /* 绑定 */
   function renderBinding(mapping,sid){
     var card=$("bindCard");
@@ -975,6 +1018,8 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
   window.onCountChange=onCountChange;
   window.submitEntry=submitEntry;
   window.copySummary=copySummary;
+  window.copyMissingList=copyMissingList;
+  window.buildMissingListText=buildMissingListText;
   window.toggleDetail=toggleDetail;
   window.saveMapping=saveMapping;
   window.deleteEntry=deleteEntry;
