@@ -608,7 +608,13 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
   function boot(){
     ensureTabs();
     var pill = $("modePill");
-    pill.textContent = isDemo ? "演示模式" : "连接中…";
+    if(isDemo){
+      pill.textContent = "演示模式";
+      pill.classList.remove("on");
+    } else {
+      pill.textContent = "在线";
+      pill.classList.add("on");
+    }
     if(localStorage.getItem(submittedKey())){
       fetchMyVote().then(function(existing){
         if(existing || isDemo){
