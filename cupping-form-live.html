@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>求索杯测盲评</title>
-<meta name="version" content="v0.2.4-tasterhint">
+<meta name="version" content="v0.2.5-lockfreq">
 <style>
 :root{
   --bg:#F5F0EB; --card:#FFFFFF; --ink:#3C2A1E; --sub:#8B7355; --gold:#C9A96E;
@@ -190,6 +190,9 @@ body{background:var(--bg);font-family:-apple-system,"PingFang SC","Microsoft YaH
     <div class="result-head" id="resultHead"></div>
     <div id="resultList"></div>
     <div class="btnrow">
+      <button class="btn btn-ghost btn-sm" style="width:100%" onclick="manualRefresh()">🔄 刷新结果</button>
+    </div>
+    <div class="btnrow">
       <button class="btn btn-ghost btn-sm" onclick="copySummary()">📋 复制汇总文本</button>
       <button class="btn btn-ghost btn-sm" onclick="copyMissingList()">⏰ 复制未提交名单</button>
     </div>
@@ -229,6 +232,14 @@ body{background:var(--bg);font-family:-apple-system,"PingFang SC","Microsoft YaH
     </div>
   </div>
 
+  <!-- 页脚 -->
+  <div style="text-align:center;margin-top:20px;padding:4px 0 10px;font-size:11px;color:#B8A794;line-height:1.9;">
+    韶关 · 求索咖啡<br>
+    <a href="https://v.douyin.com/krhEueyJL5o/" target="_blank" style="color:#8B7355;text-decoration:none;">抖音</a> ·
+    <a href="https://xhslink.com/m/2nVhPZthUPb" target="_blank" style="color:#8B7355;text-decoration:none;">小红书</a>
+    <div id="LA-DATA-WIDGET" style="text-align:center;font-size:11px;color:#8B7355;"></div>
+  </div>
+
 </div>
 
 <div class="form-submit hidden" id="submitBar">
@@ -239,6 +250,9 @@ body{background:var(--bg);font-family:-apple-system,"PingFang SC","Microsoft YaH
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- 51.la 访问统计 -->
+<script crossorigin="anonymous" charset="UTF-8" src="https://v6-widget.51.la/v6/3Q3STZKBevO6Z8CL/quote.js?theme=0&col=true&f=12&badge=icon_0&icon=center&display=0,0,0,1,0,0,0,1"></script>
 
 <!-- ===== 配置区 ===== -->
 <script>
@@ -338,10 +352,11 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
     o[sessionId].entries=arr;
     saveDemoSessions(o);
   }
-  function saveDemoRound(mapping){
+  function saveDemoRound(mapping, locked){
     var o=demoSessions();
     if(!o[sessionId]) o[sessionId]={entries:[],round:null};
-    o[sessionId].round={session_id:sessionId,mapping:mapping||null};
+    var old=o[sessionId].round||{};
+    o[sessionId].round={session_id:sessionId,mapping:mapping||null,locked:typeof locked==="boolean"?locked:(old.locked||false)};
     saveDemoSessions(o);
   }
 
@@ -352,7 +367,7 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
   }
   function fetchRound(){
     if(isDemo) return Promise.resolve(demoRound());
-    return apiGet(SUPABASE_URL+"/rest/v1/cupping_rounds?select=session_id,mapping&session_id=eq."+encodeURIComponent(sessionId)+"&limit=1").then(function(rows){ return rows.length?rows[0]:null; });
+    return apiGet(SUPABASE_URL+"/rest/v1/cupping_rounds?select=session_id,mapping,locked&session_id=eq."+encodeURIComponent(sessionId)+"&limit=1").then(function(rows){ return rows.length?rows[0]:null; });
   }
   function fetchMyEntry(t){
     if(isDemo){
@@ -606,18 +621,25 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
     if(emptyAll>0) msg="有 "+emptyAll+" 个样品未评分（不计入统计）。\n"+msg;
     if(!confirm(msg)) return;
     var btn=$("submitBtn"); btn.disabled=true; btn.textContent="提交中…";
-    fetchMyEntry(t).then(function(ex){
-      if(ex){
-        localStorage.setItem(subKey(t),"1");
-        toast("你已经提交过啦");
-        showResult();
+    fetchRound().then(function(round){
+      if(round && round.locked){
+        btn.disabled=false; btn.textContent="提交评分";
+        alert("本轮已锁定，不能再提交（找管理员解锁后重试）");
         return;
       }
-      return insertEntry(samples).then(function(){
-        localStorage.setItem(subKey(t),"1");
-        localStorage.removeItem(draftKey(t));
-        toast("提交成功 ✅");
-        showResult();
+      return fetchMyEntry(t).then(function(ex){
+        if(ex){
+          localStorage.setItem(subKey(t),"1");
+          toast("你已经提交过啦");
+          showResult();
+          return;
+        }
+        return insertEntry(samples).then(function(){
+          localStorage.setItem(subKey(t),"1");
+          localStorage.removeItem(draftKey(t));
+          toast("提交成功 ✅");
+          showResult();
+        });
       });
     }).catch(function(err){
       btn.disabled=false; btn.textContent="提交评分";
@@ -680,6 +702,7 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
 
   /* ---------- 结果 ---------- */
   var resultTimer=null;
+  var refreshMs=(function(){ var v=parseInt(localStorage.getItem("cfv_refresh")||"6000",10); return (v===6000||v===30000||v===0)?v:6000; })();
   var curResultData=null;   /* {entries, round, mapping} for current view */
   var viewSid="";
   var resultReqId=0;        /* 并发刷新防竞态：只接受最后一次请求的响应 */
@@ -688,9 +711,23 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
   function showResult(){
     $("submitBar").classList.add("hidden");
     showView("view-result");
-    clearInterval(resultTimer);
-    resultTimer=setInterval(function(){ if(!$("view-result").classList.contains("hidden")) refreshResult(); },6000);
+    applyAutoRefresh();
   }
+  function applyAutoRefresh(){
+    clearInterval(resultTimer); resultTimer=null;
+    if(refreshMs>0){
+      resultTimer=setInterval(function(){ if(!$("view-result").classList.contains("hidden")) refreshResult(); }, refreshMs);
+    }
+  }
+  function setRefreshMode(ms){
+    if(ms!==6000&&ms!==30000&&ms!==0) return;
+    refreshMs=ms;
+    localStorage.setItem("cfv_refresh",String(ms));
+    applyAutoRefresh();
+    toast(ms===0?"已切换为手动刷新（点「🔄 刷新结果」）":(ms===6000?"刷新间隔：6 秒":"刷新间隔：30 秒"));
+    refreshResult();
+  }
+  function manualRefresh(){ refreshResult(); }
   function refreshResult(){
     if(refreshBusy) return Promise.resolve();
     refreshBusy=true;
@@ -704,7 +741,12 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
       var entries=res[0]||[];
       var round=res[1];
       var mapping=(round&&round.mapping)||null;
-      renderResultInto(listEl, headEl, entries, mapping, sid);
+      /* round 偶发查空时保留上一次锁定状态，避免锁标闪烁/误解锁 */
+      var locked;
+      if(round){ locked=!!round.locked; }
+      else if(curResultData && typeof curResultData.locked === "boolean"){ locked=curResultData.locked; }
+      else { locked=false; }
+      renderResultInto(listEl, headEl, entries, mapping, sid, locked);
     }).catch(function(err){
       if(myId !== resultReqId) return;
       headEl.textContent="加载失败，请检查网络后重试";
@@ -714,7 +756,12 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
   }
   function fetchRoundForSid(sid){
     if(isDemo){ var o=demoSessions(); return Promise.resolve((o[sid]&&o[sid].round)||null); }
-    return apiGet(SUPABASE_URL+"/rest/v1/cupping_rounds?select=session_id,mapping&session_id=eq."+encodeURIComponent(sid)+"&limit=1").then(function(rows){ return rows.length?rows[0]:null; });
+    return apiGet(SUPABASE_URL+"/rest/v1/cupping_rounds?select=session_id,mapping,locked&session_id=eq."+encodeURIComponent(sid)+"&limit=1").then(function(rows){ return rows.length?rows[0]:null; });
+  }
+  /* 锁定/解锁整轮 */
+  function saveLockApi(sid, locked){
+    if(isDemo){ var o=demoSessions(); if(!o[sid]) o[sid]={entries:[],round:null}; o[sid].round=o[sid].round||{session_id:sid,mapping:null}; o[sid].round.locked=locked; saveDemoSessions(o); return Promise.resolve(); }
+    return apiRpc("cupping_set_locked",{p_session:sid,p_locked:locked});
   }
   function labelFor(sid,mapping,i){
     var key=String(i+1).padStart(2,"0");
@@ -722,7 +769,7 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
     if(mapping&&Array.isArray(mapping)){ for(var k=0;k<mapping.length;k++){ if(mapping[k].sample===key){ m=mapping[k].roaster; break; } } }
     return m?("选手"+m+"号"):("样品"+key);
   }
-  function renderResultInto(listEl, headEl, entries, mapping, sid){
+  function renderResultInto(listEl, headEl, entries, mapping, sid, locked){
     var calc=computeResult(entries);
     var tasters=entries.map(function(e){return e.taster_id;});
     var whoHtml="";
@@ -731,15 +778,19 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
       whoHtml+='<span class="who-pill'+(done?' ok':'')+'">'+(done?"✓ ":"… ")+"杯测员 "+t+"</span>";
     });
     var headPrefix=(sid===sessionId)?('本轮 <b>'+esc(sid)+'</b>'):('📜 <b>'+esc(sid)+'</b>');
-    headEl.innerHTML=headPrefix+'<br>'+calc.nTasters+' / 8 人已提交<div class="who-list">'+whoHtml+'</div>';
+    var lockTag=locked?' <span class="who-pill" style="background:#B4432E;color:#fff;border-color:#B4432E;">🔒 已锁定</span>':'';
+    headEl.innerHTML=headPrefix+lockTag+'<br>'+calc.nTasters+' / 8 人已提交<div class="who-list">'+whoHtml+'</div>';
     if(mapping&&Array.isArray(mapping)&&mapping.length){
       var binds=mapping.map(function(m){
         return '<span class="who-pill ok" style="margin-top:2px">样品'+m.sample+' → 选手'+m.roaster+'号</span>';
       }).join('');
       headEl.innerHTML+='<div class="who-list" style="margin-top:4px">'+binds+'</div>';
     }
+    curResultData={entries:entries,mapping:mapping,calc:calc,sid:sid,locked:!!locked};
     if(entries.length===0){
       listEl.innerHTML='<div class="empty">还没有人提交<br>让杯测员扫二维码开始评分吧</div>';
+      renderBinding(mapping,sid);
+      renderAdmin(entries,sid);
       return;
     }
     var html="";
@@ -760,10 +811,18 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
         '<div class="rank-overall">整体原始均分 '+round1(ps.rawOverallAvg)+'</div></div></div>';
     });
     listEl.innerHTML=html||'<div class="empty">暂无有效评分</div>';
-    curResultData={entries:entries,mapping:mapping,calc:calc,sid:sid};
     renderBinding(mapping,sid);
     renderAdmin(entries,sid);
     if(detailVisible) renderDetailBlock();
+  }
+  /* 锁定/解锁本轮 */
+  function toggleLock(){
+    var locked=!!(curResultData&&curResultData.locked);
+    if(!confirm(locked?"解锁本轮？恢复提交与自动刷新。":"锁定本轮？\n· 杯测员不能再提交\n· 结果停止自动刷新（可手动刷新）\n确定锁定？")) return;
+    saveLockApi(sessionId, !locked).then(function(){
+      toast(locked?"已解锁":"本轮已锁定 🔒");
+      refreshResult();
+    }).catch(function(err){ toast("操作失败，请确认已跑配置 SQL"); console.error(err); });
   }
   /* 明细 */
   function toggleDetail(){ detailVisible=!detailVisible; renderDetailBlock(); $("toggleDetailBtn").textContent=detailVisible?"收起明细":"查看明细"; }
@@ -879,7 +938,16 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
   function renderAdmin(entries,sid){
     var card=$("adminCard");
     if(sid!==sessionId){ card.classList.add("hidden"); return; }
-    var html='<div style="font-size:11px;color:var(--sub);margin-bottom:8px;text-align:center;">某人填错时可删除他的提交，让他重新填写</div>';
+    var locked=!!(curResultData&&curResultData.locked);
+    var html='';
+    html+='<div style="font-size:11px;color:var(--sub);text-align:center;margin-bottom:6px;">结果自动刷新间隔</div>';
+    html+='<div class="btnrow">'+
+      '<button class="btn btn-ghost btn-sm'+(refreshMs===6000?' btn-gold':'')+'" onclick="setRefreshMode(6000)">6 秒</button>'+
+      '<button class="btn btn-ghost btn-sm'+(refreshMs===30000?' btn-gold':'')+'" onclick="setRefreshMode(30000)">30 秒</button>'+
+      '<button class="btn btn-ghost btn-sm'+(refreshMs===0?' btn-gold':'')+'" onclick="setRefreshMode(0)">手动</button>'+
+    '</div>';
+    html+='<div class="btnrow"><button class="btn btn-ghost btn-sm'+(locked?' btn-danger':'')+'" style="width:100%" onclick="toggleLock()">'+(locked?'🔓 解锁本轮（恢复提交与刷新）':'🔒 锁定本轮（停止提交与自动刷新）')+'</button></div>';
+    html+='<div style="font-size:11px;color:var(--sub);margin:10px 0 8px;text-align:center;">某人填错时可删除他的提交，让他重新填写</div>';
     TASTERS.forEach(function(t){
       var done=entries.some(function(e){return e.taster_id===t;});
       html+='<div class="btnrow"><button class="btn btn-ghost btn-sm btn-danger" style="width:100%" '+(done?'':'disabled')+' onclick="deleteEntry(\''+t+'\')">删除 杯测员'+t+(done?'':'（未提交）')+' 的提交</button></div>';
@@ -946,7 +1014,7 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
     $("histResultHead").textContent=""; $("histResultList").innerHTML='<div class="empty">加载中…</div>';
     fetchVotesFor(sid).then(function(entries){
       return fetchRoundForSid(sid).then(function(round){
-        renderResultInto($("histResultList"), $("histResultHead"), entries||[], (round&&round.mapping)||null, sid);
+        renderResultInto($("histResultList"), $("histResultHead"), entries||[], (round&&round.mapping)||null, sid, !!(round&&round.locked));
       });
     }).catch(function(err){ $("histResultHead").textContent="加载失败"; console.error(err); });
   }
@@ -1023,6 +1091,9 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
   window.toggleDetail=toggleDetail;
   window.saveMapping=saveMapping;
   window.deleteEntry=deleteEntry;
+  window.toggleLock=toggleLock;
+  window.setRefreshMode=setRefreshMode;
+  window.manualRefresh=manualRefresh;
   window.showHistory=showHistory;
   window.backHome=backHome;
   window.backList=backList;
