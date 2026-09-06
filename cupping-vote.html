@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>求索杯测投票</title>
-<meta name="version" content="v0.3.0-history">
+<meta name="version" content="v0.3.1-feedback">
 <style>
 :root{
   --bg:#F5F0EB; --card:#FFFFFF; --ink:#3C2A1E; --sub:#8B7355; --gold:#C9A96E;
@@ -69,6 +69,13 @@ body{background:var(--bg);font-family:-apple-system,"PingFang SC","Microsoft YaH
 .vote-btn:active{transform:scale(0.96);}
 .vote-btn.like{background:var(--good-bg);color:var(--good);border:2px solid var(--good);}
 .vote-btn.dislike{background:var(--bad-bg);color:var(--bad);border:2px solid var(--bad);}
+.vote-btn.chosen{color:#fff;box-shadow:0 4px 14px rgba(0,0,0,0.18);}
+.vote-btn.like.chosen{background:var(--good);}
+.vote-btn.dislike.chosen{background:var(--bad);}
+.lastpick{display:inline-block;font-size:12px;font-weight:700;border-radius:20px;padding:4px 13px;margin-bottom:12px;opacity:0;transition:opacity .25s;background:var(--ink);color:#fff;letter-spacing:0.5px;}
+.lastpick.show{opacity:1;}
+.lastpick.ok{background:var(--good);}
+.lastpick.no{background:var(--bad);}
 .vote-btn .ico{display:block;font-size:30px;margin-bottom:6px;}
 .auto-next{font-size:11px;color:var(--sub);margin-top:12px;}
 
@@ -528,15 +535,36 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
       return;
     }
     var done = doneCount();
+    var curVal = (choices && curIdx < N) ? choices[curIdx] : null;
+    var chosen = (curVal === 1 || curVal === 0);
+    var stateTxt;
+    if(chosen){
+      stateTxt = (curVal === 1 ? '你之前选的是 👍 喜欢' : '你之前选的是 👎 不喜欢') + ' · 点下方按钮可改';
+    } else {
+      stateTxt = '已投 ' + done + ' / ' + N + ' · 提交前可随时点上方编号修改';
+    }
     card.innerHTML =
+      '<div class="lastpick hidden" id="lastPick"></div>' +
       '<div class="sample-label">样品 ' + pad2(curIdx+1) + ' / ' + N + '</div>' +
       '<div class="sample-no">' + pad2(curIdx+1) + '</div>' +
-      '<div class="sample-hint">已投 ' + done + ' / ' + N + ' · 提交前可随时点上方编号修改</div>' +
+      '<div class="sample-hint">' + stateTxt + '</div>' +
       '<div class="vote-btns">' +
-        '<button class="vote-btn like" onclick="Vote.pick(1)"><span class="ico">👍</span>喜欢</button>' +
-        '<button class="vote-btn dislike" onclick="Vote.pick(0)"><span class="ico">👎</span>不喜欢</button>' +
+        '<button class="vote-btn like' + (chosen && curVal === 1 ? ' chosen' : '') + '" onclick="Vote.pick(1)"><span class="ico">👍</span>' + (chosen && curVal === 1 ? '喜欢 ✓' : '喜欢') + '</button>' +
+        '<button class="vote-btn dislike' + (chosen && curVal === 0 ? ' chosen' : '') + '" onclick="Vote.pick(0)"><span class="ico">👎</span>' + (chosen && curVal === 0 ? '不喜欢 ✓' : '不喜欢') + '</button>' +
       '</div>' +
       '<div class="auto-next">选完自动跳到下一个</div>';
+  }
+  /* 选择反馈提示：卡片顶部短暂显示刚才选了啥 */
+  function showLastPick(no, val){
+    var el = $("lastPick");
+    if(!el) return;
+    el.textContent = '✓ 样品 ' + no + ' 选了 ' + (val === 1 ? '👍 喜欢' : '👎 不喜欢');
+    el.classList.remove("ok", "no");
+    el.classList.add(val === 1 ? "ok" : "no");
+    el.classList.remove("hidden");
+    el.classList.add("show");
+    clearTimeout(el._t);
+    el._t = setTimeout(function(){ el.classList.remove("show"); }, 1500);
   }
   function updateBar(){
     var d = doneCount();
@@ -550,6 +578,7 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
   }
   function pick(val){
     if(curIdx >= N) return;
+    var votedNo = curIdx;
     choices[curIdx] = val;
     saveDraft();
     var next = curIdx + 1;
@@ -558,6 +587,7 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
     renderChips();
     renderCur();
     updateBar();
+    showLastPick(pad2(votedNo+1), val);
     if(curIdx >= N) toast("全部投完，检查后提交");
   }
   function jump(i){
