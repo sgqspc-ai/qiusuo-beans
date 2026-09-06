@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>求索杯测投票</title>
-<meta name="version" content="v0.3.1-feedback">
+<meta name="version" content="v0.3.2-syncfix">
 <style>
 :root{
   --bg:#F5F0EB; --card:#FFFFFF; --ink:#3C2A1E; --sub:#8B7355; --gold:#C9A96E;
@@ -187,6 +187,9 @@ body{background:var(--bg);font-family:-apple-system,"PingFang SC","Microsoft YaH
   <div id="view-board" class="hidden">
     <div class="board-head" id="boardHead"></div>
     <div id="boardList"></div>
+    <div class="btnrow">
+      <button class="btn btn-ghost btn-sm" style="width:100%" onclick="copyBoardSummary()">📋 复制榜单结果</button>
+    </div>
   </div>
 
   <!-- 历史轮次视图 -->
@@ -304,6 +307,13 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
   }
 
   /* ---------- 后端抽象 ---------- */
+  /* 请求超时保护：10s 无响应 abort（海外节点偶发挂起，防无限"加载中"） */
+  function fetchWithTimeout(url, opt, ms){
+    var ctrl = new AbortController();
+    var timer = setTimeout(function(){ ctrl.abort(); }, ms || 10000);
+    opt.signal = ctrl.signal;
+    return fetch(url, opt).finally(function(){ clearTimeout(timer); });
+  }
   /* 网络抖动自动重试：业务错误(409等)不重试，网络错误/5xx 最多重试 tries 次 */
   function retryFetch(fn, tries){
     var delay = 800;
@@ -319,7 +329,7 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
   }
   function apiGet(url){
     return retryFetch(function(){
-      return fetch(url, { headers: { "apikey": SUPABASE_ANON_KEY, "Authorization": "Bearer " + SUPABASE_ANON_KEY } }).then(function(r){
+      return fetchWithTimeout(url, { headers: { "apikey": SUPABASE_ANON_KEY, "Authorization": "Bearer " + SUPABASE_ANON_KEY } }).then(function(r){
         if(!r.ok){ var e = new Error("GET " + r.status); e.status = r.status; throw e; }
         return r.json();
       });
@@ -327,7 +337,7 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
   }
   function apiPost(url, body){
     return retryFetch(function(){
-      return fetch(url, { method: "POST", headers: {
+      return fetchWithTimeout(url, { method: "POST", headers: {
         "apikey": SUPABASE_ANON_KEY, "Authorization": "Bearer " + SUPABASE_ANON_KEY,
         "Content-Type": "application/json", "Prefer": "return=minimal"
       }, body: JSON.stringify(body) }).then(function(r){
@@ -649,6 +659,7 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
   }
   function refreshBoard(){
     fetchAllVotes().then(function(rows){
+      lastBoard = { rows: rows || [], sid: sessionId };
       renderRankInto($("boardList"), $("boardHead"), rows || [], sessionId,
         '本轮 <b>' + esc(sessionId) + '</b>',
         '<div class="empty">还没有人投票<br>先投出你的第一票吧 ☕</div>');
@@ -656,6 +667,42 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
       $("boardHead").textContent = "榜单加载失败，检查网络后下拉重试";
       console.error(err);
     });
+  }
+  /* 复制榜单结果文本（B5：存档/转发用） */
+  var lastBoard = null;
+  function copyTextToClipboard(text){
+    var ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    var ok = false;
+    try{ ok = document.execCommand("copy"); }catch(e){}
+    document.body.removeChild(ta);
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ toast("已复制"); }, function(){ toast(ok ? "已复制" : "复制失败，请长按手动复制"); });
+    } else {
+      toast(ok ? "已复制" : "复制失败，请长按手动复制");
+    }
+  }
+  function buildBoardSummaryText(){
+    if(!lastBoard || lastBoard.rows.length === 0) return "";
+    var lines = [];
+    lines.push("【求索杯测投票结果】轮次 " + lastBoard.sid + " · " + lastBoard.rows.length + " 人参与");
+    lines.push("（喜欢=1分 · 按喜欢票数排名）");
+    var items = document.querySelectorAll("#boardList .rank-item");
+    items.forEach(function(el){
+      var name = el.querySelector(".rank-name") ? el.querySelector(".rank-name").textContent.replace(/\s+/g, " ").trim() : "";
+      var like = el.querySelector(".rank-likes") ? el.querySelector(".rank-likes").textContent.trim() : "";
+      lines.push("· " + name + " — " + like);
+    });
+    return lines.join("\n");
+  }
+  function copyBoardSummary(){
+    var text = buildBoardSummaryText();
+    if(!text){ toast("榜单还没有数据"); return; }
+    copyTextToClipboard(text);
   }
   /* 通用榜单渲染：listEl 榜单项容器 / headEl 头部 / rows 投票记录 / sid 仅作展示 / headPrefix 轮次前缀 */
   function renderRankInto(listEl, headEl, rows, sid, headPrefix, emptyHtml){
@@ -865,6 +912,8 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
   window.goVote = goVote;
   window.showBoard = showBoard;
   window.submitVote = submitVote;
+  window.copyBoardSummary = copyBoardSummary;
+  window.buildBoardSummaryText = buildBoardSummaryText;
   window.showHistory = showHistory;
   window.backHome = backHome;
   window.backList = backList;
