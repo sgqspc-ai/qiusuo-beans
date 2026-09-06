@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>求索杯测盲评</title>
+<meta name="version" content="v0.2.0-online">
+<style>
+:root{
+  --bg:#F5F0EB; --card:#FFFFFF; --ink:#3C2A1E; --sub:#8B7355; --gold:#C9A96E;
+  --line:#E0D6CC; --good:#3E7C4F; --good-bg:#EAF3EC; --bad:#B4432E; --bad-bg:#FBF0EC;
+  --rank1:#C9A96E; --rank2:#B0B0B0; --rank3:#C08A5E;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{background:var(--bg);font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;color:var(--ink);min-height:100vh;}
+.wrap{max-width:600px;margin:0 auto;padding:14px 14px 116px;}
+.top{display:flex;align-items:center;justify-content:space-between;padding:6px 2px 12px;}
+.brand{font-weight:700;font-size:16px;letter-spacing:1px;}
+.brand small{display:block;font-weight:400;font-size:11px;color:var(--sub);letter-spacing:0;}
+.mode-pill{font-size:11px;padding:3px 10px;border-radius:20px;background:#fff;border:1px solid var(--line);color:var(--sub);}
+.mode-pill.on{background:var(--good-bg);border-color:var(--good);color:var(--good);}
+.tabs{display:flex;gap:8px;margin-bottom:14px;}
+.tab{flex:1;text-align:center;padding:10px 0;border-radius:10px;background:#fff;border:1px solid var(--line);font-size:13px;color:var(--sub);cursor:pointer;font-weight:600;}
+.tab.active{background:var(--ink);color:#fff;border-color:var(--ink);}
+.hidden{display:none !important;}
+.card{background:var(--card);border-radius:16px;box-shadow:0 4px 16px rgba(60,42,30,0.08);padding:16px;margin-bottom:12px;}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:none;border-radius:12px;padding:12px 16px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;}
+.btn-dark{background:var(--ink);color:#fff;width:100%;}
+.btn-gold{background:var(--gold);color:#fff;}
+.btn-ghost{background:#fff;border:1px solid var(--line);color:var(--ink);}
+.btn-danger{color:var(--bad) !important;border-color:#E3C4BA !important;background:#FFF8F5 !important;}
+.btn-sm{padding:8px 12px;font-size:12px;border-radius:9px;}
+.btn:active{opacity:0.85;}
+.btn:disabled{opacity:0.45;cursor:not-allowed;}
+.btnrow{display:flex;gap:10px;margin-top:12px;}
+.btnrow .btn{flex:1;}
+.admin-title{font-size:17px;font-weight:700;margin-bottom:6px;text-align:center;}
+.admin-sub{font-size:13px;color:var(--sub);text-align:center;margin-bottom:12px;line-height:1.6;}
+.count-row{display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:10px;font-size:13px;color:var(--sub);}
+.count-row select,.taster-row select{padding:6px 12px;border:1px solid var(--line);border-radius:10px;font-size:14px;font-weight:700;color:var(--ink);background:#fff;font-family:inherit;cursor:pointer;}
+.count-note{font-size:11px;color:#B8A794;}
+.qr-box{display:flex;flex-direction:column;align-items:center;padding:10px 0;}
+.qr-box #qrBox{background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px;display:flex;align-items:center;justify-content:center;min-height:200px;min-width:200px;}
+.qr-box #qrBox canvas{width:180px;height:180px;}
+.qr-fallback{font-size:12px;color:var(--sub);text-align:center;line-height:1.8;}
+.link-row{display:flex;gap:8px;margin-top:10px;width:100%;max-width:340px;}
+.link-row input{flex:1;font-size:11px;color:var(--sub);border:1px solid var(--line);border-radius:8px;padding:8px;background:#FBFAF8;min-width:0;}
+
+/* 填写区 */
+.taster-row{display:flex;align-items:center;justify-content:center;gap:10px;font-size:13px;color:var(--sub);margin-bottom:10px;flex-wrap:wrap;}
+.taster-row select{min-width:140px;}
+.sub-state{font-size:12px;padding:4px 12px;border-radius:16px;background:var(--good-bg);color:var(--good);font-weight:600;}
+.form-progress{display:flex;justify-content:space-between;font-size:12px;color:var(--sub);margin:2px 0 8px;}
+.sample-card{background:var(--card);border-radius:16px;box-shadow:0 3px 12px rgba(60,42,30,0.07);margin-bottom:12px;overflow:hidden;}
+.card-head{display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--ink);color:#fff;}
+.seq{background:rgba(255,255,255,0.2);border-radius:12px;padding:2px 9px;font-size:12px;font-weight:700;}
+.card-label{flex:1;font-size:13px;font-weight:600;}
+.card-done{margin-left:auto;font-size:11px;background:var(--gold);color:#fff;border-radius:10px;padding:1px 8px;opacity:0;transition:opacity .2s;}
+.card-done.show{opacity:1;}
+.card-body{padding:12px 14px;}
+.defect-label{font-size:11px;color:var(--sub);margin-bottom:6px;}
+.defect-tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;}
+.defect-tag{cursor:pointer;}
+.defect-tag input{display:none;}
+.defect-tag span{display:inline-block;padding:3px 10px;border:1px solid var(--line);border-radius:18px;font-size:12px;color:#666;transition:all .15s;background:#fff;}
+.defect-tag input:checked + span{background:#D84315;color:#fff;border-color:#D84315;}
+.defect-tag input[value="无问题"]:checked + span{background:#2E7D32;color:#fff;border-color:#2E7D32;}
+.score-row{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:8px;}
+.score-box{background:#F8F4F0;border-radius:8px;padding:6px;text-align:center;}
+.score-box .sl{display:block;font-size:10px;color:var(--sub);margin-bottom:3px;}
+.score-box select{width:100%;text-align:center;border:none;background:transparent;font-size:14px;font-weight:600;color:var(--ink);font-family:inherit;-webkit-appearance:auto;}
+.score-box select.empty{color:#C9BBA8;}
+.score-box .w{color:#8B7355;font-size:10px;}
+.notes-row{display:flex;align-items:center;gap:6px;}
+.notes-label{font-size:11px;color:var(--sub);white-space:nowrap;}
+.notes-row input{flex:1;padding:6px 9px;border:1px solid var(--line);border-radius:8px;font-size:12px;color:var(--ink);min-width:0;background:#fff;}
+.form-submit{position:fixed;left:0;right:0;bottom:0;background:#fff;box-shadow:0 -4px 20px rgba(60,42,30,0.10);padding:10px 16px calc(10px + env(safe-area-inset-bottom));}
+.form-submit .inner{max-width:600px;margin:0 auto;display:flex;align-items:center;gap:12px;}
+.sub-count{font-size:12px;color:var(--sub);white-space:nowrap;}
+.sub-count b{color:var(--ink);}
+.submit-btn{flex:1;background:var(--ink);color:#fff;border:none;border-radius:12px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;}
+.submit-btn.ok{background:var(--good);}
+.submit-btn:disabled{opacity:0.4;}
+
+/* 结果 */
+.result-head{font-size:13px;color:var(--sub);text-align:center;margin-bottom:12px;line-height:1.8;}
+.rank-item{display:flex;align-items:center;gap:10px;background:#fff;border-radius:12px;padding:11px 14px;margin-bottom:8px;box-shadow:0 2px 8px rgba(60,42,30,0.06);}
+.rank-pos{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;flex-shrink:0;}
+.rank-pos.top1{background:var(--rank1);color:#fff;}
+.rank-pos.top2{background:var(--rank2);color:#fff;}
+.rank-pos.top3{background:var(--rank3);color:#fff;}
+.rank-pos.normal{background:#F1EAE0;color:var(--sub);}
+.rank-main{flex:1;min-width:0;}
+.rank-name{font-size:14px;font-weight:700;}
+.rank-name small{font-size:10px;color:var(--sub);font-weight:400;}
+.rank-bar{height:6px;background:#EFE7DC;border-radius:4px;margin-top:5px;overflow:hidden;}
+.rank-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--ink));border-radius:4px;}
+.rank-nums{text-align:right;flex-shrink:0;}
+.rank-score{font-size:16px;font-weight:800;color:var(--good);}
+.rank-score small{font-size:10px;color:var(--sub);font-weight:400;}
+.rank-overall{font-size:10px;color:var(--sub);margin-top:2px;}
+.empty{text-align:center;padding:36px 16px;color:var(--sub);font-size:13px;line-height:1.8;}
+.who-list{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:4px;}
+.who-pill{font-size:11px;padding:3px 10px;border-radius:14px;background:#fff;border:1px solid var(--line);color:var(--sub);}
+.who-pill.ok{background:var(--good-bg);border-color:var(--good);color:var(--good);}
+.detail-block{background:#F8F4F0;border-radius:10px;padding:12px;font-family:ui-monospace,Menlo,monospace;font-size:11px;color:var(--ink);white-space:pre-wrap;line-height:1.7;max-height:360px;overflow-y:auto;margin-top:10px;}
+
+/* 绑定 */
+.bind-title{font-size:14px;font-weight:700;text-align:center;margin-bottom:10px;}
+.bind-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
+.bind-row{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--sub);}
+.bind-row select{flex:1;padding:6px 4px;border:1px solid var(--line);border-radius:8px;font-size:12px;color:var(--ink);background:#fff;min-width:0;}
+
+/* 历史 */
+.hist-top{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+.hist-top h2{font-size:16px;font-weight:700;flex:1;margin:0;}
+.back-btn{background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:13px;color:var(--ink);cursor:pointer;font-family:inherit;}
+.hist-item{display:flex;align-items:center;gap:10px;background:#fff;border-radius:12px;padding:12px 14px;margin-bottom:8px;box-shadow:0 2px 8px rgba(60,42,30,0.06);cursor:pointer;}
+.hi-main{flex:1;min-width:0;}
+.hi-time{font-size:14px;font-weight:700;}
+.hi-sub{font-size:11px;color:var(--sub);margin-top:3px;}
+.hi-now{display:inline-block;font-size:10px;background:var(--good-bg);color:var(--good);border-radius:8px;padding:1px 6px;margin-left:6px;}
+.hi-go{font-size:13px;color:var(--gold);font-weight:700;}
+.hist-empty{padding:36px 16px;text-align:center;color:var(--sub);font-size:13px;line-height:1.8;}
+
+/* toast */
+.toast{position:fixed;top:14px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;font-size:13px;padding:10px 18px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,0.2);z-index:99;opacity:0;pointer-events:none;transition:opacity .25s;white-space:nowrap;max-width:92vw;overflow:hidden;text-overflow:ellipsis;}
+.toast.show{opacity:1;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="top">
+    <div class="brand">求索杯测盲评<small>6维打分 · 提交后自动出结果</small></div>
+    <span class="mode-pill" id="modePill">连接中</span>
+  </div>
+
+  <!-- 管理员台 -->
+  <div id="view-home" class="hidden">
+    <div class="card">
+      <div class="admin-title">☕ 本轮杯测二维码</div>
+      <div class="admin-sub">把码给杯测员扫<br>每人选自己的编号 → 打分 → 提交 → 结果自动汇总</div>
+      <div class="count-row">
+        <span>样品数量</span>
+        <select id="countSel" onchange="onCountChange()"></select>
+        <span class="count-note">2 ~ 20 可选</span>
+      </div>
+      <div class="qr-box">
+        <div id="qrBox"></div>
+        <div class="link-row">
+          <input id="voteLink" readonly onclick="this.select()">
+          <button class="btn btn-ghost btn-sm" onclick="copyLink()">复制</button>
+        </div>
+      </div>
+      <div class="btnrow">
+        <button class="btn btn-ghost" onclick="goForm()">去填写</button>
+        <button class="btn btn-gold" onclick="showResult()">看结果</button>
+      </div>
+      <div class="btnrow">
+        <button class="btn btn-ghost btn-sm" style="width:100%" onclick="newRound()">🔄 开新一轮（生成新二维码）</button>
+      </div>
+      <div class="btnrow">
+        <button class="btn btn-ghost btn-sm" style="width:100%" onclick="showHistory()">📜 历史轮次</button>
+      </div>
+    </div>
+    <div class="card hidden" id="demoToolsCard">
+      <div class="admin-title" style="font-size:15px">演示工具</div>
+      <div class="btnrow">
+        <button class="btn btn-ghost btn-sm" onclick="seedDemo()">模拟 3 位杯测员提交</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 填写视图 -->
+  <div id="view-form" class="hidden">
+    <div class="card" style="padding:12px;">
+      <div class="taster-row">
+        <span>我是</span>
+        <select id="tasterSel" onchange="onTasterChange()"></select>
+        <span id="subState"></span>
+      </div>
+      <div class="form-progress"><span id="progTxt">已填 0/20</span><span id="draftState">草稿自动保存</span></div>
+    </div>
+    <div id="cardsBox"></div>
+  </div>
+
+  <!-- 结果视图 -->
+  <div id="view-result" class="hidden">
+    <div class="result-head" id="resultHead"></div>
+    <div id="resultList"></div>
+    <div class="btnrow">
+      <button class="btn btn-ghost btn-sm" style="width:100%" onclick="copySummary()">📋 复制汇总文本</button>
+    </div>
+    <div class="card hidden" id="bindCard">
+      <div class="bind-title">🏆 样品 → 烘焙选手 绑定（比赛结果宣布用）</div>
+      <div class="bind-grid" id="bindGrid"></div>
+      <div class="btnrow">
+        <button class="btn btn-dark" onclick="saveMapping()">保存绑定</button>
+      </div>
+    </div>
+    <div class="card hidden" id="adminCard">
+      <div class="bind-title">🛠 管理员</div>
+      <div id="adminList"></div>
+    </div>
+    <div class="card hidden" id="detailCard">
+      <div class="bind-title">📋 各杯测员明细</div>
+      <div class="detail-block" id="detailBlock"></div>
+    </div>
+    <div class="btnrow" style="justify-content:center;">
+      <button class="btn btn-ghost btn-sm" id="toggleDetailBtn" onclick="toggleDetail()">查看明细</button>
+    </div>
+  </div>
+
+  <!-- 历史视图 -->
+  <div id="view-history" class="hidden">
+    <div id="histListWrap">
+      <div class="hist-top"><button class="back-btn" onclick="backHome()">← 返回</button><h2>📜 历史轮次</h2></div>
+      <div id="histList"></div>
+    </div>
+    <div id="histDetailWrap" class="hidden">
+      <div class="hist-top"><button class="back-btn" onclick="backList()">← 全部轮次</button><h2 id="histDetailTitle">轮次结果</h2></div>
+      <div class="result-head" id="histResultHead"></div>
+      <div id="histResultList"></div>
+      <div class="btnrow hidden" id="histDelRow">
+        <button class="btn btn-ghost btn-sm btn-danger" style="width:100%" onclick="deleteRound()">🗑 删除这轮</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="form-submit hidden" id="submitBar">
+  <div class="inner">
+    <div class="sub-count">已填 <b id="doneCount">0</b>/<span id="totalCount">20</span></div>
+    <button class="submit-btn" id="submitBtn" onclick="submitEntry()">提交评分</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- ===== 配置区 ===== -->
+<script>
+/* 样品数量范围：2~20（默认沿用原表单） */
+var SAMPLE_COUNT = 10;
+var SAMPLE_MAX = 20;
+/* Supabase：填 URL/key = 在线；留空 = 演示模式（数据只存本机） */
+var SUPABASE_URL = "https://ucweqaaaclpucgxbvajw.supabase.co";
+var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
+</script>
+
+<!-- ===== 逻辑区 ===== -->
+<script>
+(function(){
+  "use strict";
+  var DIM = ["aroma","acidity","sweetness","body","aftertaste","overall"];
+  var DIM_LABEL = { aroma:"香气", acidity:"酸质", sweetness:"甜度", body:"醇厚", aftertaste:"回甘", overall:"整体" };
+  var DEFECTS = ["涩","酸","苦","平淡","空洞","夹生","无问题"];
+  var TASTERS = ["01","02","03","04","05","06","07","08"];
+  var WEIGHT = { overall:0.40, aroma:0.15, acidity:0.15, sweetness:0.10, body:0.10, aftertaste:0.10 };
+
+  var LS_VOTER = "cfv_voter";
+  var params = new URLSearchParams(location.search);
+  var sessionId = (params.get("s")||"").trim();
+  var N = clamp(parseInt(params.get("n"),10)||SAMPLE_COUNT, 2, SAMPLE_MAX);
+  var isDemo = !(SUPABASE_URL && SUPABASE_ANON_KEY);
+
+  function clamp(v,a,b){ return Math.min(Math.max(v,a),b); }
+  function genId(){ if(window.crypto&&crypto.randomUUID) return "v"+crypto.randomUUID().replace(/-/g,"").slice(0,14); return "v"+Date.now().toString(36)+Math.random().toString(36).slice(2,10); }
+  function genSession(){ return "c" + Date.now().toString(36).slice(-4) + Math.random().toString(36).slice(2,8); }
+  function $(id){ return document.getElementById(id); }
+  function esc(s){ return String(s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c];}); }
+  function pad2(n){ return n<10?"0"+n:""+n; }
+  function toast(msg){ var t=$("toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(t._timer); t._timer=setTimeout(function(){t.classList.remove("show");},2400); }
+
+  var voterId = localStorage.getItem(LS_VOTER);
+  if(!voterId){ voterId = genId(); localStorage.setItem(LS_VOTER, voterId); }
+
+  /* 本地状态 */
+  function draftKey(t){ return "cfv_draft_" + sessionId + "_" + t; }
+  function subKey(t){ return "cfv_sub_" + sessionId + "_" + t; }
+  function tasterNow(){ return (localStorage.getItem("cfv_taster_" + sessionId)||"01"); }
+  function setTasterNow(t){ localStorage.setItem("cfv_taster_" + sessionId, t); }
+
+  function blankSamples(n){
+    var arr=[];
+    for(var i=0;i<n;i++){ arr.push({ scores:{aroma:"",acidity:"",sweetness:"",body:"",aftertaste:"",overall:""}, defects:["无问题"], notes:"" }); }
+    return arr;
+  }
+  function loadDraft(t){
+    try{ var raw=localStorage.getItem(draftKey(t)); if(raw){ var d=JSON.parse(raw); if(d&&d.samples&&d.samples.length===N) return d.samples; } }catch(e){}
+    return null;
+  }
+  function saveDraft(t, samples){ localStorage.setItem(draftKey(t), JSON.stringify({taster:t, samples:samples})); }
+
+  /* ---------- 后端抽象 ---------- */
+  /* 请求超时保护：10s 无响应 abort（海外节点偶发挂起，防无限"加载中"） */
+  function fetchWithTimeout(url, opt, ms){
+    var ctrl = new AbortController();
+    var timer = setTimeout(function(){ ctrl.abort(); }, ms || 10000);
+    opt.signal = ctrl.signal;
+    return fetch(url, opt).finally(function(){ clearTimeout(timer); });
+  }
+  function retryFetch(fn, tries){
+    var delay=700;
+    function attempt(left){
+      return fn().catch(function(err){
+        var st=err&&err.status;
+        if(st===409||st===401||st===403||st===404) throw err;
+        if(left<=1) throw err;
+        return new Promise(function(res){setTimeout(res,delay);}).then(function(){return attempt(left-1);});
+      });
+    }
+    return attempt(tries);
+  }
+  function apiGet(url){ return retryFetch(function(){ return fetchWithTimeout(url,{headers:{"apikey":SUPABASE_ANON_KEY,"Authorization":"Bearer "+SUPABASE_ANON_KEY}}).then(function(r){ if(!r.ok){var e=new Error("GET "+r.status);e.status=r.status;throw e;} return r.json(); }); },2); }
+  function apiPost(url, body){ return retryFetch(function(){ return fetchWithTimeout(url,{method:"POST",headers:{"apikey":SUPABASE_ANON_KEY,"Authorization":"Bearer "+SUPABASE_ANON_KEY,"Content-Type":"application/json","Prefer":"return=minimal"},body:JSON.stringify(body)}).then(function(r){ if(!r.ok){var e=new Error("POST "+r.status);e.status=r.status;throw e;} return r; }); },3); }
+  function apiRpc(fnName, body){ return retryFetch(function(){ return fetchWithTimeout(SUPABASE_URL+"/rest/v1/rpc/"+fnName,{method:"POST",headers:{"apikey":SUPABASE_ANON_KEY,"Authorization":"Bearer "+SUPABASE_ANON_KEY,"Content-Type":"application/json","Prefer":"return=minimal"},body:JSON.stringify(body)}).then(function(r){ if(!r.ok){var e=new Error("POST "+r.status);e.status=r.status;throw e;} return r; }); },2); }
+
+  /* demo 存储 */
+  function demoSessions(){ try{ return JSON.parse(localStorage.getItem("cfv_demo_sessions")||"{}"); }catch(e){ return {}; } }
+  function saveDemoSessions(o){ localStorage.setItem("cfv_demo_sessions", JSON.stringify(o)); }
+  function demoEntries(){
+    var o=demoSessions();
+    return o[sessionId] && o[sessionId].entries ? o[sessionId].entries : [];
+  }
+  function demoRound(){
+    var o=demoSessions();
+    return (o[sessionId] && o[sessionId].round) || null;
+  }
+  function saveDemoEntry(entry){
+    var o=demoSessions();
+    if(!o[sessionId]) o[sessionId]={entries:[],round:null};
+    var arr=o[sessionId].entries.filter(function(e){return e.taster_id!==entry.taster_id;});
+    if(!entry.created_at) entry.created_at=new Date().toISOString();
+    arr.push(entry);
+    o[sessionId].entries=arr;
+    saveDemoSessions(o);
+  }
+  function saveDemoRound(mapping){
+    var o=demoSessions();
+    if(!o[sessionId]) o[sessionId]={entries:[],round:null};
+    o[sessionId].round={session_id:sessionId,mapping:mapping||null};
+    saveDemoSessions(o);
+  }
+
+  /* 真实查询 */
+  function fetchEntries(){
+    if(isDemo) return Promise.resolve(demoEntries());
+    return apiGet(SUPABASE_URL+"/rest/v1/cupping_entries?select=taster_id,sample_count,data,created_at&session_id=eq."+encodeURIComponent(sessionId)+"&limit=100");
+  }
+  function fetchRound(){
+    if(isDemo) return Promise.resolve(demoRound());
+    return apiGet(SUPABASE_URL+"/rest/v1/cupping_rounds?select=session_id,mapping&session_id=eq."+encodeURIComponent(sessionId)+"&limit=1").then(function(rows){ return rows.length?rows[0]:null; });
+  }
+  function fetchMyEntry(t){
+    if(isDemo){
+      var rows=demoEntries().filter(function(e){return e.taster_id===t;});
+      return Promise.resolve(rows.length?rows[0]:null);
+    }
+    return apiGet(SUPABASE_URL+"/rest/v1/cupping_entries?select=taster_id&session_id=eq."+encodeURIComponent(sessionId)+"&taster_id=eq."+encodeURIComponent(t)+"&limit=1").then(function(rows){ return rows.length?rows[0]:null; });
+  }
+  function insertEntry(samples){
+    var body={ session_id:sessionId, taster_id:tasterNow(), sample_count:N, data:{samples:samples} };
+    if(isDemo){ saveDemoEntry(body); return Promise.resolve(); }
+    return apiPost(SUPABASE_URL+"/rest/v1/cupping_entries",[body]);
+  }
+  function deleteEntryApi(t){
+    if(isDemo){ var o=demoSessions(); if(o[sessionId]){ o[sessionId].entries=o[sessionId].entries.filter(function(e){return e.taster_id!==t;}); saveDemoSessions(o);} return Promise.resolve(); }
+    return apiRpc("cupping_delete_entry",{p_session:sessionId,p_taster:t});
+  }
+  function saveMappingApi(mapping){
+    if(isDemo){ saveDemoRound(mapping); return Promise.resolve(); }
+    return apiRpc("cupping_save_mapping",{p_session:sessionId,p_mapping:mapping});
+  }
+  function fetchAllSessions(){
+    if(isDemo){
+      var o=demoSessions(), rows=[];
+      Object.keys(o).forEach(function(sid){
+        (o[sid].entries||[]).forEach(function(e){ rows.push({session_id:sid, created_at:e.created_at||"", sample_count:e.sample_count||0}); });
+      });
+      return Promise.resolve(rows);
+    }
+    return apiGet(SUPABASE_URL+"/rest/v1/cupping_entries?select=session_id,created_at,sample_count&limit=5000");
+  }
+  function fetchRoundsAll(){
+    if(isDemo){
+      var o=demoSessions(), out=[];
+      Object.keys(o).forEach(function(sid){ if(o[sid].round) out.push(o[sid].round); });
+      return Promise.resolve(out);
+    }
+    return apiGet(SUPABASE_URL+"/rest/v1/cupping_rounds?select=session_id,mapping&limit=500");
+  }
+  function deleteRoundApi(sid){
+    if(isDemo){ var o=demoSessions(); delete o[sid]; saveDemoSessions(o); return Promise.resolve(); }
+    return apiRpc("cupping_delete_round",{p_session:sid});
+  }
+  function fetchVotesFor(sid){
+    if(isDemo){ var o=demoSessions(); return Promise.resolve((o[sid]&&o[sid].entries)||[]); }
+    return apiGet(SUPABASE_URL+"/rest/v1/cupping_entries?select=taster_id,sample_count,data&session_id=eq."+encodeURIComponent(sid)+"&limit=200");
+  }
+
+  /* ---------- 视图切换 ---------- */
+  function showView(name){
+    ["view-home","view-form","view-result","view-history"].forEach(function(v){$(v).classList.add("hidden");});
+    $(name).classList.remove("hidden");
+    var a=$("tabForm"),b=$("tabResult"),c=$("tabHist");
+    if(a)a.classList.toggle("active", name==="view-form");
+    if(b)b.classList.toggle("active", name==="view-result");
+    if(c)c.classList.toggle("active", name==="view-history");
+    if(name==="view-result") refreshResult();
+  }
+  var topHtml=document.querySelector(".top");
+  function ensureTabs(){
+    if($("tabForm")) return;
+    var d=document.createElement("div"); d.className="tabs";
+    d.innerHTML='<div class="tab" id="tabForm" onclick="Tab.form()">填写</div><div class="tab" id="tabResult" onclick="Tab.result()">结果</div><div class="tab" id="tabHist" onclick="Tab.hist()">📜 历史</div>';
+    topHtml.after(d);
+  }
+
+  /* ---------- 管理员台 ---------- */
+  function fillCountSel(){
+    var sel=$("countSel"); if(!sel) return;
+    sel.innerHTML="";
+    for(var i=2;i<=SAMPLE_MAX;i++){
+      var o=document.createElement("option"); o.value=i; o.textContent="样品 "+i+" 个"; if(i===N)o.selected=true; sel.appendChild(o);
+    }
+  }
+  function renderHome(){
+    showView("view-home");
+    fillCountSel();
+    var link=location.origin+location.pathname+"?s="+sessionId+"&n="+N;
+    $("voteLink").value=link;
+    drawQr(link);
+    var pill=$("modePill");
+    if(isDemo){ pill.textContent="演示模式"; pill.classList.remove("on"); $("demoToolsCard").classList.remove("hidden"); }
+    else { pill.textContent="在线"; pill.classList.add("on"); $("demoToolsCard").classList.add("hidden"); }
+  }
+  function drawQr(text){
+    var box=$("qrBox"); box.innerHTML="";
+    if(window.QRCode){ try{ new QRCode(box,{text:text,width:180,height:180,correctLevel:QRCode.CorrectLevel.M}); return; }catch(e){} }
+    box.innerHTML='<div class="qr-fallback">二维码库加载失败<br>请用上方链接</div>';
+  }
+  function copyLink(){
+    var inp=$("voteLink"); inp.select(); var ok=false; try{ok=document.execCommand("copy");}catch(e){}
+    if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(inp.value).then(function(){toast("链接已复制");},function(){toast(ok?"链接已复制":"复制失败，请长按链接");}); }
+    else toast(ok?"链接已复制":"复制失败，请长按链接");
+  }
+  function newRound(){
+    if(!confirm("确定开新一轮？当前轮数据保留，互不影响。")) return;
+    sessionId=genSession();
+    history.replaceState(null,"","?s="+sessionId+"&n="+N);
+    renderHome();
+    toast("新一轮已开启");
+  }
+  function onCountChange(){
+    var v=parseInt($("countSel").value,10);
+    if(!(v>=2&&v<=SAMPLE_MAX)||v===N) return;
+    N=v;
+    sessionId=genSession();
+    history.replaceState(null,"","?s="+sessionId+"&n="+N);
+    renderHome();
+    toast("已用 "+N+" 个样品开启新一轮");
+  }
+
+  /* ---------- 填写 ---------- */
+  var curTaster = "";
+  var samples = null;   /* 当前填写态数组 */
+  function renderFormView(){
+    showView("view-form");
+    var sel=$("tasterSel");
+    if(sel.options.length===0){
+      TASTERS.forEach(function(t){ var o=document.createElement("option"); o.value=t; o.textContent="杯测员 "+t; sel.appendChild(o); });
+    }
+    var t=tasterNow();
+    if(curTaster!==t){ curTaster=t; samples=null; }
+    if(!samples){ var d=loadDraft(t); samples=d||blankSamples(N); if(!d) saveDraft(t,samples); }
+    sel.value=t;
+    updateSubState();
+    renderCards();
+    updateBar();
+    $("submitBar").classList.remove("hidden");
+  }
+  function onTasterChange(){
+    var t=$("tasterSel").value;
+    setTasterNow(t);
+    curTaster=t;
+    samples=null;
+    renderFormView();
+  }
+  function updateSubState(){
+    var el=$("subState");
+    if(localStorage.getItem(subKey(curTaster))){
+      el.textContent="已提交 ✅";
+    } else {
+      el.textContent="";
+    }
+  }
+  function sampleDone(s){
+    var sc=s.scores;
+    return DIM.every(function(d){ return sc[d]!==""&&sc[d]!=null; });
+  }
+  function countDone(){
+    var c=0;
+    (samples||[]).forEach(function(s){ if(sampleDone(s)) c++; });
+    return c;
+  }
+  function renderCards(){
+    var box=$("cardsBox");
+    var html="";
+    for(var i=0;i<N;i++){
+      var s=samples[i];
+      var done=sampleDone(s);
+      var defs="";
+      DEFECTS.forEach(function(d){
+        defs+='<label class="defect-tag"><input type="checkbox" data-si="'+i+'" value="'+d+'"'+(s.defects.indexOf(d)>=0?' checked':'')+' onchange="Form.toggleDefect('+i+',this)"><span>'+d+'</span></label>';
+      });
+      var scores="";
+      DIM.forEach(function(dim){
+        var v=s.scores[dim];
+        var cls=(v===""||v==null)?"empty":"";
+        var opts='<option value="">—</option>';
+        for(var k=1;k<=10;k++) opts+='<option value="'+k+'"'+(String(v)===String(k)?' selected':'')+'>'+k+'</option>';
+        scores+='<div class="score-box"><label class="sl">'+DIM_LABEL[dim]+'</label><select class="'+cls+'" onchange="Form.score('+i+',\''+dim+'\',this)">'+opts+'</select>'+(dim==="overall"?'<div class="w">权重40%</div>':'')+'</div>';
+      });
+      html+='<div class="sample-card" id="sc-'+pad2(i+1)+'">'+
+        '<div class="card-head"><span class="seq">'+pad2(i+1)+'</span><span class="card-label">样品 '+pad2(i+1)+'</span><span class="card-done'+(done?' show':'')+'" id="cd-'+i+'">已填 ✓</span></div>'+
+        '<div class="card-body">'+
+          '<div class="defect-label">问题（可选，不参与计分）</div>'+
+          '<div class="defect-tags">'+defs+'</div>'+
+          '<div class="score-row">'+scores+'</div>'+
+          '<div class="notes-row"><label class="notes-label">备注</label><input value="'+esc(s.notes||"")+'" placeholder="风味描述..." oninput="Form.note('+i+',this.value)"></div>'+
+        '</div></div>';
+    }
+    box.innerHTML=html;
+  }
+  function persist(){ if(samples) saveDraft(curTaster, samples); }
+  function markSampleCard(i){
+    var el=$("cd-"+i); if(el) el.classList.toggle("show", sampleDone(samples[i]));
+    updateBar();
+  }
+  function updateBar(){
+    var c=countDone();
+    $("progTxt").textContent="已填 "+c+"/"+N;
+    $("doneCount").textContent=c;
+    $("totalCount").textContent=N;
+    var btn=$("submitBtn");
+    btn.classList.toggle("ok", c===N);
+    btn.disabled=c===0;
+  }
+  var pick={
+    score:function(i,dim,el){ samples[i].scores[dim]=el.value; el.classList.toggle("empty",el.value===""); persist(); markSampleCard(i); },
+    toggleDefect:function(i,el){
+      var v=el.value;
+      if(v==="无问题"){
+        if(el.checked){ DEFECTS.forEach(function(d){ if(d!=="无问题") samples[i].defects=samples[i].defects.filter(function(x){return x!==d;}); }); }
+      } else {
+        if(el.checked) samples[i].defects=samples[i].defects.filter(function(x){return x!=="无问题";});
+      }
+      if(el.checked){ if(samples[i].defects.indexOf(v)<0) samples[i].defects.push(v); }
+      else { samples[i].defects=samples[i].defects.filter(function(x){return x!==v;}); }
+      if(el.checked&&v!=="无问题"){ /* 若有具体问题被选，确保无问题取消并重绘全部chips */ }
+      persist();
+      renderCards(); /* 重绘同步"无问题"状态 */
+    },
+    note:function(i,val){ samples[i].notes=val; persist(); }
+  };
+  function submitEntry(){
+    var t=curTaster;
+    /* 校验：部分填写（样品有任一维度值但不全）*/
+    var partial=[];
+    var emptyAll=0;
+    for(var i=0;i<N;i++){
+      var s=samples[i];
+      var filled=0;
+      DIM.forEach(function(d){ if(s.scores[d]!==""&&s.scores[d]!=null) filled++; });
+      if(filled>0&&filled<6) partial.push("样品"+pad2(i+1)+"（"+(6-filled)+" 项未评分）");
+      if(filled===0) emptyAll++;
+    }
+    if(partial.length>0){ alert("以下样品评分不完整，请补全或清空后提交：\n"+partial.join("\n")); return; }
+    var msg="确定以 杯测员"+t+" 提交？提交后不能修改。";
+    if(emptyAll>0) msg="有 "+emptyAll+" 个样品未评分（不计入统计）。\n"+msg;
+    if(!confirm(msg)) return;
+    var btn=$("submitBtn"); btn.disabled=true; btn.textContent="提交中…";
+    fetchMyEntry(t).then(function(ex){
+      if(ex){
+        localStorage.setItem(subKey(t),"1");
+        toast("你已经提交过啦");
+        showResult();
+        return;
+      }
+      return insertEntry(samples).then(function(){
+        localStorage.setItem(subKey(t),"1");
+        localStorage.removeItem(draftKey(t));
+        toast("提交成功 ✅");
+        showResult();
+      });
+    }).catch(function(err){
+      btn.disabled=false; btn.textContent="提交评分";
+      var st=err&&err.status,msg2=String(err&&err.message||err);
+      if(st===409||msg2.indexOf("23505")>=0){ localStorage.setItem(subKey(t),"1"); toast("你在这轮已提交过"); showResult(); }
+      else toast("提交失败，请检查网络后重试");
+    });
+  }
+  function goForm(){ renderFormView(); }
+
+  /* ---------- 统计 ---------- */
+  /* 输入 entries[{taster_id,data:{samples:[{scores,defects,notes}]}}]，返回 {perSample, perTaster, missing} */
+  function computeResult(entries){
+    var perTaster={};
+    entries.forEach(function(en){
+      var samplesArr=(en.data&&en.data.samples)||[];
+      var all=[];
+      samplesArr.forEach(function(s){ DIM.forEach(function(d){ var v=parseInt(s.scores[d],10); if(v>=1&&v<=10) all.push(v); }); });
+      var mn=Math.min.apply(null,all), mx=Math.max.apply(null,all);
+      var std=function(x){ if(mx===mn) return x; return (x-mn)/(mx-mn)*10; };
+      perTaster[en.taster_id]={
+        min:mn,max:mx,
+        perSample:samplesArr.map(function(s){
+          var raw={}; DIM.forEach(function(d){ raw[d]=parseInt(s.scores[d],10)||null; });
+          var st={}; DIM.forEach(function(d){ st[d]=raw[d]==null?null:std(raw[d]); });
+          var comp=null;
+          if(DIM.every(function(d){return st[d]!=null;})){
+            comp=0; DIM.forEach(function(d){ comp+=st[d]*WEIGHT[d]; });
+          }
+          return { raw:raw, std:st, composite:comp, defects:(s.defects||[]).filter(function(x){return x!=="无问题";}), notes:s.notes||"" };
+        })
+      };
+    });
+    var nSamples=N;
+    if(entries.length&&entries[0].data&&entries[0].data.samples) nSamples=entries[0].data.samples.length;
+    var perSample=[];
+    for(var i=0;i<nSamples;i++){
+      var comps=[],raws=[];
+      Object.keys(perTaster).forEach(function(t){
+        var ps=perTaster[t].perSample[i];
+        if(ps&&ps.composite!=null){ comps.push(ps.composite); raws.push(ps.raw.overall); }
+      });
+      var avg=comps.length?comps.reduce(function(a,b){return a+b;},0)/comps.length:null;
+      var rawAvg=raws.length?raws.reduce(function(a,b){return a+b;},0)/raws.length:null;
+      perSample.push({ idx:i, composite:avg, rawOverallAvg:rawAvg });
+    }
+    var order=[];
+    for(var j=0;j<perSample.length;j++) order.push(j);
+    order.sort(function(a,b){
+      var A=perSample[a],B=perSample[b];
+      if(A.composite==null&&B.composite==null) return a-b;
+      if(A.composite==null) return 1;
+      if(B.composite==null) return -1;
+      if(B.composite!==A.composite) return B.composite-A.composite;
+      return (B.rawOverallAvg||0)-(A.rawOverallAvg||0) || a-b;
+    });
+    return { perTaster:perTaster, perSample:perSample, order:order, nTasters:Object.keys(perTaster).length };
+  }
+  function round1(x){ return x==null?null:Math.round(x*10)/10; }
+
+  /* ---------- 结果 ---------- */
+  var resultTimer=null;
+  var curResultData=null;   /* {entries, round, mapping} for current view */
+  var viewSid="";
+  var resultReqId=0;        /* 并发刷新防竞态：只接受最后一次请求的响应 */
+  var refreshBusy=false;    /* 在途请求未完成不发起新刷新，防慢网络堆积 */
+  var detailVisible=false;
+  function showResult(){
+    $("submitBar").classList.add("hidden");
+    showView("view-result");
+    clearInterval(resultTimer);
+    resultTimer=setInterval(function(){ if(!$("view-result").classList.contains("hidden")) refreshResult(); },6000);
+  }
+  function refreshResult(){
+    if(refreshBusy) return Promise.resolve();
+    refreshBusy=true;
+    return renderResultFor(sessionId, $("resultList"), $("resultHead")).then(function(){ refreshBusy=false; }, function(){ refreshBusy=false; });
+  }
+  function renderResultFor(sid, listEl, headEl){
+    var myId = ++resultReqId;
+    listEl.innerHTML='<div class="empty">加载中…</div>';
+    return Promise.all([fetchVotesFor(sid), fetchRoundForSid(sid)]).then(function(res){
+      if(myId !== resultReqId) return;
+      var entries=res[0]||[];
+      var round=res[1];
+      var mapping=(round&&round.mapping)||null;
+      renderResultInto(listEl, headEl, entries, mapping, sid);
+    }).catch(function(err){
+      if(myId !== resultReqId) return;
+      headEl.textContent="加载失败，请检查网络后重试";
+      listEl.innerHTML='<div class="empty">加载失败，点「结果」重试</div>';
+      console.error(err);
+    });
+  }
+  function fetchRoundForSid(sid){
+    if(isDemo){ var o=demoSessions(); return Promise.resolve((o[sid]&&o[sid].round)||null); }
+    return apiGet(SUPABASE_URL+"/rest/v1/cupping_rounds?select=session_id,mapping&session_id=eq."+encodeURIComponent(sid)+"&limit=1").then(function(rows){ return rows.length?rows[0]:null; });
+  }
+  function labelFor(sid,mapping,i){
+    var key=String(i+1).padStart(2,"0");
+    var m=null;
+    if(mapping&&Array.isArray(mapping)){ for(var k=0;k<mapping.length;k++){ if(mapping[k].sample===key){ m=mapping[k].roaster; break; } } }
+    return m?("选手"+m+"号"):("样品"+key);
+  }
+  function renderResultInto(listEl, headEl, entries, mapping, sid){
+    var calc=computeResult(entries);
+    var tasters=entries.map(function(e){return e.taster_id;});
+    var whoHtml="";
+    TASTERS.forEach(function(t){
+      var done=tasters.indexOf(t)>=0;
+      whoHtml+='<span class="who-pill'+(done?' ok':'')+'">'+(done?"✓ ":"… ")+"杯测员 "+t+"</span>";
+    });
+    var headPrefix=(sid===sessionId)?('本轮 <b>'+esc(sid)+'</b>'):('📜 <b>'+esc(sid)+'</b>');
+    headEl.innerHTML=headPrefix+'<br>'+calc.nTasters+' / 8 人已提交<div class="who-list">'+whoHtml+'</div>';
+    if(entries.length===0){
+      listEl.innerHTML='<div class="empty">还没有人提交<br>让杯测员扫二维码开始评分吧</div>';
+      return;
+    }
+    var html="";
+    var last=-1,rank=0;
+    calc.order.forEach(function(idx){
+      var ps=calc.perSample[idx];
+      var comp=ps.composite;
+      if(comp==null) return;
+      if(comp!==last){ rank++; last=comp; }
+      var cls="normal"; if(rank===1)cls="top1"; else if(rank===2)cls="top2"; else if(rank===3)cls="top3";
+      var maxV=calc.perSample[calc.order[0]].composite||1;
+      var pct=(comp/maxV*100)+"%";
+      html+='<div class="rank-item">'+
+        '<div class="rank-pos '+cls+'">'+(rank===1?"🥇":rank===2?"🥈":rank===3?"🥉":rank)+'</div>'+
+        '<div class="rank-main"><div class="rank-name">'+labelFor(sid,mapping,idx)+(mapping?'':' <small>'+esc("样品"+pad2(idx+1))+'</small>')+'</div>'+
+        '<div class="rank-bar"><div class="rank-fill" style="width:'+pct+'"></div></div></div>'+
+        '<div class="rank-nums"><div class="rank-score">'+round1(comp)+' <small>综合分</small></div>'+
+        '<div class="rank-overall">整体原始均分 '+round1(ps.rawOverallAvg)+'</div></div></div>';
+    });
+    listEl.innerHTML=html||'<div class="empty">暂无有效评分</div>';
+    curResultData={entries:entries,mapping:mapping,calc:calc,sid:sid};
+    renderBinding(mapping,sid);
+    renderAdmin(entries,sid);
+    if(detailVisible) renderDetailBlock();
+  }
+  /* 明细 */
+  function toggleDetail(){ detailVisible=!detailVisible; renderDetailBlock(); $("toggleDetailBtn").textContent=detailVisible?"收起明细":"查看明细"; }
+  function renderDetailBlock(){
+    var el=$("detailBlock"); var card=$("detailCard");
+    if(!detailVisible||!curResultData){ card.classList.add("hidden"); return; }
+    var d=curResultData;
+    var lines=[];
+    d.entries.forEach(function(en){
+      lines.push("【杯测员"+en.taster_id+" · "+((en.data.samples||[]).length)+" 样品】");
+      (en.data.samples||[]).forEach(function(s,si){
+        var parts=[];
+        DIM.forEach(function(dim){ var v=s.scores[dim]; if(v) parts.push(DIM_LABEL[dim].charAt(0)+v); });
+        var defs=(s.defects||[]).filter(function(x){return x!=="无问题";});
+        var line=String(si+1).padStart(2,"0")+"# 样品"+String(si+1).padStart(2,"0")+"："+(parts.join(" / "));
+        if(defs.length) line+=" | 问题:"+defs.join("、");
+        if(s.notes) line+=" | "+s.notes;
+        lines.push(line);
+      });
+      lines.push("");
+    });
+    lines.push("—— 标准化说明：每位杯测员独立 Min-Max 标准化(0-10)，综合分=整体40%+香气15%+酸质15%+甜度10%+醇厚10%+回甘10% ——");
+    el.textContent=lines.join("\n");
+    card.classList.remove("hidden");
+  }
+  function copySummary(){
+    if(!curResultData) return;
+    var d=curResultData;
+    var lines=[];
+    lines.push("【杯测排名】"+d.sid+" · "+d.calc.nTasters+"人");
+    var last=-1,rank=0;
+    d.calc.order.forEach(function(idx){
+      var ps=d.calc.perSample[idx]; if(ps.composite==null) return;
+      if(ps.composite!==last){rank++;last=ps.composite;}
+      lines.push(rank+"# "+labelFor(d.sid,d.mapping,idx)+" 综合"+round1(ps.composite)+" 整体原始均分"+round1(ps.rawOverallAvg));
+    });
+    lines.push("");
+    d.entries.forEach(function(en){
+      lines.push("【杯测员"+en.taster_id+"】");
+      (en.data.samples||[]).forEach(function(s,si){
+        var parts=[];
+        DIM.forEach(function(dim){ var v=s.scores[dim]; if(v) parts.push(DIM_LABEL[dim].charAt(0)+v); });
+        lines.push("  "+String(si+1).padStart(2,"0")+"# "+(parts.join(" / ")));
+      });
+    });
+    var text=lines.join("\n");
+    var ta=document.createElement("textarea"); ta.value=text; ta.style.position="fixed"; ta.style.opacity="0";
+    document.body.appendChild(ta); ta.select();
+    try{ document.execCommand("copy"); toast("已复制"); }catch(e){ toast("复制失败"); }
+    document.body.removeChild(ta);
+  }
+  /* 绑定 */
+  function renderBinding(mapping,sid){
+    var card=$("bindCard");
+    if(sid!==sessionId){ card.classList.add("hidden"); return; }
+    var grid=$("bindGrid");
+    var html="";
+    var Ncur=curResultData&&curResultData.calc&&curResultData.calc.perSample?curResultData.calc.perSample.length:N;
+    for(var i=0;i<Ncur;i++){
+      var key=String(i+1).padStart(2,"0");
+      var cur="";
+      if(mapping&&Array.isArray(mapping)){ mapping.forEach(function(m){ if(m.sample===key) cur=m.roaster; }); }
+      var opts='<option value="">—</option>';
+      for(var k=1;k<=20;k++){ var vv=String(k).padStart(2,"0"); opts+='<option value="'+vv+'"'+(cur===vv?' selected':'')+'>'+vv+'号</option>'; }
+      html+='<div class="bind-row"><span>样品'+key+'</span><select id="bind-'+key+'">'+opts+'</select></div>';
+    }
+    grid.innerHTML=html;
+    card.classList.remove("hidden");
+  }
+  function saveMapping(){
+    var map=[];
+    for(var i=0;i<N;i++){
+      var key=String(i+1).padStart(2,"0");
+      var el=$("bind-"+key);
+      if(el&&el.value) map.push({sample:key,roaster:el.value});
+    }
+    saveMappingApi(map).then(function(){
+      toast("绑定已保存 ✅");
+      refreshResult();
+    }).catch(function(err){
+      toast("保存失败，请确认已跑配置 SQL 后重试");
+      console.error(err);
+    });
+  }
+  /* 管理员：删除某人提交 */
+  function renderAdmin(entries,sid){
+    var card=$("adminCard");
+    if(sid!==sessionId){ card.classList.add("hidden"); return; }
+    var html='<div style="font-size:11px;color:var(--sub);margin-bottom:8px;text-align:center;">某人填错时可删除他的提交，让他重新填写</div>';
+    TASTERS.forEach(function(t){
+      var done=entries.some(function(e){return e.taster_id===t;});
+      html+='<div class="btnrow"><button class="btn btn-ghost btn-sm btn-danger" style="width:100%" '+(done?'':'disabled')+' onclick="deleteEntry(\''+t+'\')">删除 杯测员'+t+(done?'':'（未提交）')+' 的提交</button></div>';
+    });
+    $("adminList").innerHTML=html;
+    card.classList.remove("hidden");
+  }
+  function deleteEntry(t){
+    if(!confirm("删除 杯测员"+t+" 的提交？他需要重新填写才能计入。")) return;
+    deleteEntryApi(t).then(function(){
+      localStorage.removeItem(subKey(t));
+      toast("已删除 杯测员"+t+" 的提交");
+      refreshResult();
+    }).catch(function(err){ toast("删除失败，请确认已跑配置 SQL"); console.error(err); });
+  }
+
+  /* ---------- 历史 ---------- */
+  var histListCache=[];
+  var viewingHistSid="";
+  function fmtTs(iso){ try{ var d=new Date(iso); var p=function(x){return (x<10?"0":"")+x;}; return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate())+" "+p(d.getHours())+":"+p(d.getMinutes()); }catch(e){ return iso||""; } }
+  function showHistory(){
+    $("submitBar").classList.add("hidden");
+    clearInterval(resultTimer);
+    showView("view-history");
+    $("histDetailWrap").classList.add("hidden");
+    $("histListWrap").classList.remove("hidden");
+    loadHistory();
+  }
+  function backHome(){ showView("view-home"); }
+  function backList(){ $("histDetailWrap").classList.add("hidden"); $("histListWrap").classList.remove("hidden"); loadHistory(); }
+  function loadHistory(){
+    var listEl=$("histList"); listEl.innerHTML='<div class="hist-empty">加载中…</div>';
+    Promise.all([fetchAllSessions(),fetchRoundsAll()]).then(function(res){
+      var rows=res[0]||[];
+      var roundsMap={}; (res[1]||[]).forEach(function(r){ roundsMap[r.session_id]=r.mapping; });
+      var groups={};
+      rows.forEach(function(r){
+        var sid=r.session_id; if(!sid) return;
+        if(!groups[sid]) groups[sid]={count:0,ts:r.created_at||"",n:r.sample_count||0,hasMap:false};
+        groups[sid].count++;
+        if(r.created_at&&(!groups[sid].ts||r.created_at<groups[sid].ts)) groups[sid].ts=r.created_at;
+        if(r.sample_count) groups[sid].n=r.sample_count;
+      });
+      var arr=Object.keys(groups).map(function(sid){ return {sid:sid,count:groups[sid].count,ts:groups[sid].ts,n:groups[sid].n}; });
+      arr.sort(function(a,b){return (b.ts||"").localeCompare(a.ts||"");});
+      histListCache=arr;
+      if(arr.length===0){ listEl.innerHTML='<div class="hist-empty">还没有历史轮次<br>开一轮评分，结果会自动存在这里</div>'; return; }
+      var html="";
+      arr.forEach(function(g){
+        var nowTag=(g.sid===sessionId)?'<span class="hi-now">当前轮</span>':"";
+        html+='<div class="hist-item" onclick="openHistoryDetail(\''+g.sid+'\')"><div class="hi-main"><div class="hi-time">'+(g.ts?fmtTs(g.ts):g.sid)+nowTag+'</div><div class="hi-sub">'+g.count+' 人提交 · '+g.n+' 样品</div></div><div class="hi-go">看结果 ›</div></div>';
+      });
+      listEl.innerHTML=html;
+    }).catch(function(err){ listEl.innerHTML='<div class="hist-empty">历史加载失败，请检查网络</div>'; console.error(err); });
+  }
+  function openHistoryDetail(sid){
+    viewingHistSid=sid;
+    var meta=null; for(var i=0;i<histListCache.length;i++){ if(histListCache[i].sid===sid){meta=histListCache[i];break;} }
+    $("histDetailTitle").textContent="轮次结果 · "+(meta&&meta.ts?fmtTs(meta.ts):sid);
+    var delRow=$("histDelRow");
+    if(delRow){ delRow.dataset.info=(meta&&meta.ts?fmtTs(meta.ts):sid)+" · "+(meta?meta.count:0)+" 人"; delRow.classList.remove("hidden"); }
+    $("histListWrap").classList.add("hidden");
+    $("histDetailWrap").classList.remove("hidden");
+    $("histResultHead").textContent=""; $("histResultList").innerHTML='<div class="empty">加载中…</div>';
+    fetchVotesFor(sid).then(function(entries){
+      return fetchRoundForSid(sid).then(function(round){
+        renderResultInto($("histResultList"), $("histResultHead"), entries||[], (round&&round.mapping)||null, sid);
+      });
+    }).catch(function(err){ $("histResultHead").textContent="加载失败"; console.error(err); });
+  }
+  function deleteRound(){
+    var sid=viewingHistSid;
+    var info="这轮"; var delRow=$("histDelRow"); if(delRow&&delRow.dataset.info) info=delRow.dataset.info;
+    if(!confirm("确定删除 "+info+"？\n删除后不可恢复。")) return;
+    deleteRoundApi(sid).then(function(){
+      toast("已删除");
+      histListCache=histListCache.filter(function(g){return g.sid!==sid;});
+      backList();
+    }).catch(function(err){
+      var msg=String(err&&err.message||err);
+      if(msg.indexOf("404")>=0||msg.indexOf("Could not find the function")>=0) toast("删除功能未启用：需先在 Supabase 跑配置 SQL");
+      else toast("删除失败，请重试");
+      console.error(err);
+    });
+  }
+
+  /* ---------- 演示数据 ---------- */
+  function seedDemo(){
+    if(!isDemo) return;
+    var seeds=[[1,8,7,6,7,8,7],[2,6,8,7,6,7,6],[3,7,6,8,7,6,8]];
+    seeds.forEach(function(seed){
+      var t=seed[0], base=seed.slice(1);
+      var arr=[];
+      for(var i=0;i<N;i++){
+        var off=Math.round(Math.sin(i*1.7+t*2.1)*1.5);
+        var sc={};
+        DIM.forEach(function(dim,di){ sc[dim]=clamp(base[di]+off+((i+di)%3===0?1:0),1,10); });
+        var defects=i%4===0?["苦"]:["无问题"];
+        arr.push({scores:sc,defects:defects,notes:""});
+      }
+      saveDemoEntry({taster_id:"0"+t,sample_count:N,data:{samples:arr}});
+    });
+    toast("已模拟 3 位杯测员提交");
+    if(!$("view-result").classList.contains("hidden")) refreshResult();
+  }
+
+  /* ---------- boot ---------- */
+  function boot(){
+    ensureTabs();
+    var pill=$("modePill");
+    if(isDemo){ pill.textContent="演示模式"; pill.classList.remove("on"); } else { pill.textContent="在线"; pill.classList.add("on"); }
+    if(localStorage.getItem(subKey(tasterNow()))){
+      /* 本设备有人提交过 -> 允许继续看结果 */
+    }
+    if(!sessionId){
+      sessionId=genSession();
+      history.replaceState(null,"","?s="+sessionId+"&n="+N);
+      renderHome();
+      return;
+    }
+    renderHome(); /* 默认落管理员台，填写/结果可切 */
+  }
+  function goHomeIfNeeded(){}
+
+  window.Tab={
+    form:function(){ clearInterval(resultTimer); renderFormView(); },
+    result:function(){ showResult(); },
+    hist:function(){ showHistory(); }
+  };
+  window.Form={ score:pick.score, toggleDefect:pick.toggleDefect, note:pick.note };
+  window.onTasterChange=onTasterChange;
+  window.goForm=goForm;
+  window.showResult=showResult;
+  window.copyLink=copyLink;
+  window.newRound=newRound;
+  window.onCountChange=onCountChange;
+  window.submitEntry=submitEntry;
+  window.copySummary=copySummary;
+  window.toggleDetail=toggleDetail;
+  window.saveMapping=saveMapping;
+  window.deleteEntry=deleteEntry;
+  window.showHistory=showHistory;
+  window.backHome=backHome;
+  window.backList=backList;
+  window.openHistoryDetail=openHistoryDetail;
+  window.deleteRound=deleteRound;
+  window.seedDemo=seedDemo;
+
+  if(document.readyState==="loading"){ document.addEventListener("DOMContentLoaded",boot); } else { boot(); }
+})();
+</script>
+
+<!-- qrcode 库：同目录本地优先 -->
+<script>
+function loadQrFallback(){
+  var s=document.createElement("script");
+  s.src="https://unpkg.com/qrcodejs@1.0.0/qrcode.min.js";
+  s.onerror=function(){ console.warn("qrcode lib unavailable"); };
+  document.head.appendChild(s);
+}
+</script>
+<script src="qrcode.min.js" onerror="loadQrFallback()"></script>
+</body>
+</html>
