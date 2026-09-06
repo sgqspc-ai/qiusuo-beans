@@ -44,6 +44,7 @@ body{background:var(--bg);font-family:-apple-system,"PingFang SC","Microsoft YaH
 .btn-dark{background:var(--ink);color:#fff;width:100%;}
 .btn-gold{background:var(--gold);color:#fff;}
 .btn-ghost{background:#fff;border:1px solid var(--line);color:var(--ink);}
+.btn-danger{color:#B4432E !important;border-color:#E3C4BA !important;background:#FFF8F5 !important;}
 .btn-sm{padding:8px 12px;font-size:12px;border-radius:9px;}
 .btn:active{opacity:0.85;}
 .btn:disabled{opacity:0.45;cursor:not-allowed;}
@@ -98,6 +99,19 @@ body{background:var(--bg);font-family:-apple-system,"PingFang SC","Microsoft YaH
 .rank-dislikes{font-size:11px;color:var(--sub);margin-top:2px;}
 .empty{text-align:center;padding:44px 20px;color:var(--sub);font-size:14px;line-height:1.8;}
 
+/* 历史轮次 */
+.hist-top{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+.hist-top h2{font-size:16px;font-weight:700;flex:1;margin:0;}
+.back-btn{background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:13px;color:var(--ink);cursor:pointer;font-family:inherit;}
+.hist-item{display:flex;align-items:center;gap:10px;background:#fff;border-radius:12px;padding:13px 14px;margin-bottom:8px;box-shadow:0 2px 8px rgba(60,42,30,0.06);cursor:pointer;}
+.hist-item:active{background:#F8F4F0;}
+.hi-main{flex:1;min-width:0;}
+.hi-time{font-size:14px;font-weight:700;}
+.hi-sub{font-size:11px;color:var(--sub);margin-top:3px;}
+.hi-now{display:inline-block;font-size:10px;background:var(--good-bg);color:var(--good);border-radius:8px;padding:1px 6px;margin-left:6px;}
+.hi-go{font-size:13px;color:var(--gold);font-weight:700;flex-shrink:0;}
+.hist-empty{padding:40px 20px;text-align:center;color:var(--sub);font-size:13px;line-height:1.8;}
+
 /* 感谢 */
 .done-ico{font-size:64px;text-align:center;margin:30px 0 6px;}
 .done-title{font-size:20px;font-weight:800;text-align:center;margin-bottom:8px;}
@@ -140,6 +154,9 @@ body{background:var(--bg);font-family:-apple-system,"PingFang SC","Microsoft YaH
       <div class="btnrow">
         <button class="btn btn-ghost btn-sm" style="width:100%" onclick="newRound()">🔄 开新一轮（生成新二维码）</button>
       </div>
+      <div class="btnrow">
+        <button class="btn btn-ghost btn-sm" style="width:100%" id="histBtn" onclick="showHistory()">📜 历史轮次</button>
+      </div>
     </div>
     <div class="card" id="demoToolsCard">
       <div class="admin-title" style="font-size:15px">演示工具</div>
@@ -163,6 +180,22 @@ body{background:var(--bg);font-family:-apple-system,"PingFang SC","Microsoft YaH
   <div id="view-board" class="hidden">
     <div class="board-head" id="boardHead"></div>
     <div id="boardList"></div>
+  </div>
+
+  <!-- 历史轮次视图 -->
+  <div id="view-history" class="hidden">
+    <div id="histListWrap">
+      <div class="hist-top"><button class="back-btn" onclick="backHome()">← 返回</button><h2>📜 历史轮次</h2></div>
+      <div id="histList"></div>
+    </div>
+    <div id="histDetailWrap" class="hidden">
+      <div class="hist-top"><button class="back-btn" onclick="backList()">← 全部轮次</button><h2 id="histDetailTitle">轮次详情</h2></div>
+      <div class="board-head" id="histDetailHead"></div>
+      <div id="histDetailList"></div>
+      <div class="btnrow hidden" id="histDelRow">
+        <button class="btn btn-ghost btn-sm btn-danger" style="width:100%" onclick="deleteRound()">🗑 删除这轮投票</button>
+      </div>
+    </div>
   </div>
 
   <!-- 已投感谢 -->
@@ -307,6 +340,33 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
     if(isDemo) return Promise.resolve(demoRows());
     return apiGet(SUPABASE_URL + "/rest/v1/votes?select=voter_id,choices&session_id=eq." + encodeURIComponent(sessionId) + "&limit=2000");
   }
+  /* 指定轮次数据（历史详情用） */
+  function fetchVotesFor(sid){
+    if(isDemo) return Promise.resolve([]);
+    return apiGet(SUPABASE_URL + "/rest/v1/votes?select=voter_id,choices&session_id=eq." + encodeURIComponent(sid) + "&limit=2000");
+  }
+  /* 全部轮次元数据（历史列表用） */
+  function fetchAllSessions(){
+    if(isDemo) return Promise.resolve([]);
+    return apiGet(SUPABASE_URL + "/rest/v1/votes?select=session_id,created_at,choices&limit=5000");
+  }
+  /* 删除整轮（调 PostgRPC delete_session，需先在 SQL Editor 建函数） */
+  function deleteRoundApi(sid){
+    if(isDemo) return Promise.reject(new Error("演示模式不支持删除"));
+    return retryFetch(function(){
+      return fetch(SUPABASE_URL + "/rest/v1/rpc/delete_session", {
+        method: "POST",
+        headers: {
+          "apikey": SUPABASE_ANON_KEY, "Authorization": "Bearer " + SUPABASE_ANON_KEY,
+          "Content-Type": "application/json", "Prefer": "return=minimal"
+        },
+        body: JSON.stringify({ p_session: sid })
+      }).then(function(r){
+        if(!r.ok){ var e = new Error("POST " + r.status); e.status = r.status; throw e; }
+        return r;
+      });
+    }, 2);
+  }
   function fetchMyVote(){
     if(isDemo){
       var rows = demoRows();
@@ -327,11 +387,12 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
 
   /* ---------- 视图切换 ---------- */
   function showView(name){
-    ["view-home","view-vote","view-board","view-done"].forEach(function(v){ $(v).classList.add("hidden"); });
+    ["view-home","view-vote","view-board","view-history","view-done"].forEach(function(v){ $(v).classList.add("hidden"); });
     $(name).classList.remove("hidden");
-    var voteTab = $("tabVote"), boardTab = $("tabBoard");
+    var voteTab = $("tabVote"), boardTab = $("tabBoard"), histTab = $("tabHist");
     if(voteTab){ voteTab.classList.toggle("active", name === "view-vote" || name === "view-done"); }
     if(boardTab){ boardTab.classList.toggle("active", name === "view-board"); }
+    if(histTab){ histTab.classList.toggle("active", name === "view-history"); }
     if(name === "view-board") refreshBoard();
   }
 
@@ -341,7 +402,7 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
     if($("tabVote")) return;
     var d = document.createElement("div");
     d.className = "tabs";
-    d.innerHTML = '<div class="tab" id="tabVote" onclick="Tab.vote()">投票</div><div class="tab" id="tabBoard" onclick="Tab.board()">榜单</div>';
+    d.innerHTML = '<div class="tab" id="tabVote" onclick="Tab.vote()">投票</div><div class="tab" id="tabBoard" onclick="Tab.board()">榜单</div><div class="tab" id="tabHist" onclick="Tab.hist()">📜 历史</div>';
     topHtml.after(d);
   }
 
@@ -558,32 +619,41 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
   }
   function refreshBoard(){
     fetchAllVotes().then(function(rows){
-      renderBoard(rows || []);
+      renderRankInto($("boardList"), $("boardHead"), rows || [], sessionId,
+        '本轮 <b>' + esc(sessionId) + '</b>',
+        '<div class="empty">还没有人投票<br>先投出你的第一票吧 ☕</div>');
     }).catch(function(err){
       $("boardHead").textContent = "榜单加载失败，检查网络后下拉重试";
       console.error(err);
     });
   }
-  function renderBoard(rows){
+  /* 通用榜单渲染：listEl 榜单项容器 / headEl 头部 / rows 投票记录 / sid 仅作展示 / headPrefix 轮次前缀 */
+  function renderRankInto(listEl, headEl, rows, sid, headPrefix, emptyHtml){
     var participants = rows.length;
-    var likes = new Array(N).fill(0);
-    var dislikes = new Array(N).fill(0);
+    /* 样品数从第一条有效记录推断（历史轮次的 N 可能与当前不同） */
+    var n = 0;
+    for(var ri=0; ri<rows.length; ri++){
+      if(Array.isArray(rows[ri].choices)){ n = rows[ri].choices.length; break; }
+    }
+    if(!(n >= 1)) n = N;
+    headEl.innerHTML = headPrefix + ' · ' + participants + ' 人已投 · ' + n + ' 样品<br>分数 = 喜欢票数（喜欢1分 / 不喜欢0分）';
+    if(participants === 0){
+      listEl.innerHTML = emptyHtml || '<div class="empty">暂无数据</div>';
+      return;
+    }
+    var likes = new Array(n).fill(0);
+    var dislikes = new Array(n).fill(0);
     rows.forEach(function(r){
       var c = r.choices;
       if(!Array.isArray(c)) return;
-      for(var i=0;i<N && i<c.length;i++){
+      for(var i=0;i<n && i<c.length;i++){
         if(c[i]===1) likes[i]++;
         else if(c[i]===0) dislikes[i]++;
       }
     });
-    $("boardHead").innerHTML = '本轮 <b>' + esc(sessionId) + '</b> · ' + participants + ' 人已投<br>分数 = 喜欢票数（喜欢1分 / 不喜欢0分）';
     var list = [];
-    for(var i=0;i<N;i++){ list.push({ idx:i, likes:likes[i], dislikes:dislikes[i] }); }
+    for(var i=0;i<n;i++){ list.push({ idx:i, likes:likes[i], dislikes:dislikes[i] }); }
     list.sort(function(a,b){ return b.likes - a.likes || a.idx - b.idx; });
-    if(participants === 0){
-      $("boardList").innerHTML = '<div class="empty">还没有人投票<br>先投出你的第一票吧 ☕</div>';
-      return;
-    }
     var html = "";
     var lastLikes = -1, rank = 0;
     for(var k=0;k<list.length;k++){
@@ -601,7 +671,122 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
         '<div class="rank-dislikes">👎 ' + it.dislikes + '</div></div>' +
       '</div>';
     }
-    $("boardList").innerHTML = html;
+    listEl.innerHTML = html;
+  }
+
+  /* ---------- 历史轮次 ---------- */
+  var histSessions = [];
+  var viewingHistSid = "";
+  function fmtTs(iso){
+    try{
+      var d = new Date(iso);
+      var p = function(x){ return (x<10?"0":"") + x; };
+      return d.getFullYear() + "-" + p(d.getMonth()+1) + "-" + p(d.getDate()) + " " + p(d.getHours()) + ":" + p(d.getMinutes());
+    }catch(e){ return iso || ""; }
+  }
+  function showHistory(){
+    $("submitBar").classList.add("hidden");
+    clearInterval(boardTimer);
+    showView("view-history");
+    $("histDetailWrap").classList.add("hidden");
+    $("histListWrap").classList.remove("hidden");
+    loadHistory();
+  }
+  function backHome(){ showView("view-home"); }
+  function backList(){
+    $("histDetailWrap").classList.add("hidden");
+    $("histListWrap").classList.remove("hidden");
+    loadHistory();
+  }
+  function loadHistory(){
+    var listEl = $("histList");
+    listEl.innerHTML = '<div class="hist-empty">加载中…</div>';
+    fetchAllSessions().then(function(rows){
+      var groups = {};
+      (rows || []).forEach(function(r){
+        var sid = r.session_id;
+        if(!sid) return;
+        if(!groups[sid]) groups[sid] = { count: 0, ts: r.created_at || "", n: 0 };
+        var g = groups[sid];
+        g.count++;
+        if(r.created_at && (!g.ts || r.created_at < g.ts)) g.ts = r.created_at;
+        if(!g.n && Array.isArray(r.choices)) g.n = r.choices.length;
+      });
+      var arr = Object.keys(groups).map(function(sid){
+        return { sid: sid, count: groups[sid].count, ts: groups[sid].ts, n: groups[sid].n };
+      });
+      arr.sort(function(a,b){ return (b.ts||"").localeCompare(a.ts||""); });
+      histSessions = arr;
+      if(arr.length === 0){
+        listEl.innerHTML = '<div class="hist-empty">还没有历史轮次<br>每开一轮投票，结果会自动存在这里</div>';
+        return;
+      }
+      var html = "";
+      arr.forEach(function(g){
+        var nowTag = (g.sid === sessionId) ? '<span class="hi-now">当前轮</span>' : "";
+        var tsTxt = g.ts ? fmtTs(g.ts) : g.sid;
+        html += '<div class="hist-item" onclick="openHistoryDetail(\'' + g.sid + '\')">' +
+          '<div class="hi-main">' +
+            '<div class="hi-time">' + esc(tsTxt) + nowTag + '</div>' +
+            '<div class="hi-sub">' + g.count + ' 人投票 · ' + g.n + ' 样品' + (g.sid===sessionId ? ' · 正在进行的轮次' : '') + '</div>' +
+          '</div>' +
+          '<div class="hi-go">查看 ›</div>' +
+        '</div>';
+      });
+      listEl.innerHTML = html;
+    }).catch(function(err){
+      listEl.innerHTML = '<div class="hist-empty">历史加载失败<br>请检查网络后重试</div>';
+      console.error(err);
+    });
+  }
+  function openHistoryDetail(sid){
+    viewingHistSid = sid;
+    var meta = null;
+    for(var i=0;i<histSessions.length;i++){ if(histSessions[i].sid === sid){ meta = histSessions[i]; break; } }
+    var title = sid;
+    var delInfo = "轮次 " + sid;
+    if(meta){
+      title = meta.ts ? fmtTs(meta.ts) : sid;
+      delInfo = (meta.ts ? fmtTs(meta.ts) : sid) + " · " + meta.count + " 人";
+    }
+    $("histDetailTitle").textContent = "轮次详情 · " + (meta && meta.ts ? fmtTs(meta.ts) : sid);
+    var delRow = $("histDelRow");
+    if(delRow){
+      delRow.dataset.info = delInfo;
+      delRow.classList.remove("hidden");
+    }
+    $("histListWrap").classList.add("hidden");
+    $("histDetailWrap").classList.remove("hidden");
+    $("histDetailHead").textContent = "";
+    $("histDetailList").innerHTML = '<div class="hist-empty">加载中…</div>';
+    fetchVotesFor(sid).then(function(rows){
+      renderRankInto($("histDetailList"), $("histDetailHead"), rows || [], sid,
+        '📜 ' + esc(title),
+        '<div class="empty">这轮还没有投票记录</div>');
+    }).catch(function(err){
+      $("histDetailHead").textContent = "加载失败，请重试";
+      console.error(err);
+    });
+  }
+  function deleteRound(){
+    var sid = viewingHistSid;
+    var info = "这轮投票";
+    var delRow = $("histDelRow");
+    if(delRow && delRow.dataset.info) info = delRow.dataset.info;
+    if(!confirm("确定删除" + info + "？\n删除后不可恢复，请确认。")) return;
+    deleteRoundApi(sid).then(function(){
+      toast("已删除该轮");
+      histSessions = histSessions.filter(function(g){ return g.sid !== sid; });
+      backList();
+    }).catch(function(err){
+      var msg = String(err && err.message || err);
+      if(msg.indexOf("404") >= 0 || msg.indexOf("Could not find the function") >= 0){
+        toast("删除功能未启用：需要先在 Supabase SQL Editor 跑一段配置 SQL");
+      } else {
+        toast("删除失败，请检查网络后重试");
+      }
+      console.error(err);
+    });
   }
 
   /* ---------- 已投检查 & 启动 ---------- */
@@ -639,7 +824,8 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
 
   window.Tab = {
     vote: function(){ clearInterval(boardTimer); renderVote(); },
-    board: function(){ showBoard(); }
+    board: function(){ showBoard(); },
+    hist: function(){ showHistory(); }
   };
   window.Vote = { pick: pick, jump: jump };
   window.seedDemo = seedDemo;
@@ -649,6 +835,11 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
   window.goVote = goVote;
   window.showBoard = showBoard;
   window.submitVote = submitVote;
+  window.showHistory = showHistory;
+  window.backHome = backHome;
+  window.backList = backList;
+  window.openHistoryDetail = openHistoryDetail;
+  window.deleteRound = deleteRound;
 
   if(document.readyState === "loading"){
     document.addEventListener("DOMContentLoaded", boot);
