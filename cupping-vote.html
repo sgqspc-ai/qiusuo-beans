@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>求索杯测投票</title>
-<meta name="version" content="v0.3.2-syncfix">
+<meta name="version" content="v0.3.3-brandfreq">
 <style>
 :root{
   --bg:#F5F0EB; --card:#FFFFFF; --ink:#3C2A1E; --sub:#8B7355; --gold:#C9A96E;
@@ -188,6 +188,12 @@ body{background:var(--bg);font-family:-apple-system,"PingFang SC","Microsoft YaH
     <div class="board-head" id="boardHead"></div>
     <div id="boardList"></div>
     <div class="btnrow">
+      <button class="btn btn-ghost btn-sm" onclick="setBoardRefresh(5000)">刷新 5秒</button>
+      <button class="btn btn-ghost btn-sm" onclick="setBoardRefresh(30000)">30秒</button>
+      <button class="btn btn-ghost btn-sm" onclick="setBoardRefresh(0)">手动</button>
+      <button class="btn btn-ghost btn-sm" onclick="manualBoardRefresh()">🔄 刷一下</button>
+    </div>
+    <div class="btnrow">
       <button class="btn btn-ghost btn-sm" style="width:100%" onclick="copyBoardSummary()">📋 复制榜单结果</button>
     </div>
   </div>
@@ -218,6 +224,14 @@ body{background:var(--bg);font-family:-apple-system,"PingFang SC","Microsoft YaH
     </div>
   </div>
 
+  <!-- 页脚 -->
+  <div style="text-align:center;margin-top:20px;padding:4px 0 10px;font-size:11px;color:#B8A794;line-height:1.9;">
+    韶关 · 求索咖啡<br>
+    <a href="https://v.douyin.com/krhEueyJL5o/" target="_blank" style="color:#8B7355;text-decoration:none;">抖音</a> ·
+    <a href="https://xhslink.com/m/2nVhPZthUPb" target="_blank" style="color:#8B7355;text-decoration:none;">小红书</a>
+    <div id="LA-DATA-WIDGET" style="text-align:center;font-size:11px;color:#8B7355;"></div>
+  </div>
+
 </div>
 
 <div class="submit-bar hidden" id="submitBar">
@@ -228,6 +242,9 @@ body{background:var(--bg);font-family:-apple-system,"PingFang SC","Microsoft YaH
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- 51.la 访问统计 -->
+<script crossorigin="anonymous" charset="UTF-8" src="https://v6-widget.51.la/v6/3Q3STZKBevO6Z8CL/quote.js?theme=0&col=true&f=12&badge=icon_0&icon=center&display=0,0,0,1,0,0,0,1"></script>
 
 <!-- ===== 配置区 ===== -->
 <script>
@@ -651,12 +668,28 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
 
   /* ---------- 榜单 ---------- */
   var boardTimer = null;
+  var refreshMs = (function(){ var v = parseInt(localStorage.getItem("cv_refresh")||"5000", 10); return (v===5000||v===30000||v===0)?v:5000; })();
   function showBoard(){
     $("submitBar").classList.add("hidden");
     showView("view-board");
-    clearInterval(boardTimer);
-    boardTimer = setInterval(function(){ if(!$("view-board").classList.contains("hidden")) refreshBoard(); }, 5000);
+    applyBoardRefresh();
   }
+  function applyBoardRefresh(){
+    clearInterval(boardTimer);
+    boardTimer = null;
+    if(refreshMs > 0){
+      boardTimer = setInterval(function(){ if(!$("view-board").classList.contains("hidden")) refreshBoard(); }, refreshMs);
+    }
+  }
+  function setBoardRefresh(ms){
+    if(ms!==5000 && ms!==30000 && ms!==0) return;
+    refreshMs = ms;
+    localStorage.setItem("cv_refresh", String(ms));
+    applyBoardRefresh();
+    toast(ms===0 ? "已切换为手动刷新（点 🔄）" : (ms===5000 ? "榜单刷新：5 秒" : "榜单刷新：30 秒"));
+    if(!$("view-board").classList.contains("hidden")) refreshBoard();
+  }
+  function manualBoardRefresh(){ refreshBoard(); }
   function refreshBoard(){
     fetchAllVotes().then(function(rows){
       lastBoard = { rows: rows || [], sid: sessionId };
@@ -914,6 +947,8 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
   window.submitVote = submitVote;
   window.copyBoardSummary = copyBoardSummary;
   window.buildBoardSummaryText = buildBoardSummaryText;
+  window.setBoardRefresh = setBoardRefresh;
+  window.manualBoardRefresh = manualBoardRefresh;
   window.showHistory = showHistory;
   window.backHome = backHome;
   window.backList = backList;
