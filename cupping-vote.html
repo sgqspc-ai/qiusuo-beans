@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>求索杯测投票</title>
-<meta name="version" content="v0.4.1-chiplike">
+<meta name="version" content="v0.5.0-rank">
 <style>
 :root{
   --bg:#F5F0EB; --card:#FFFFFF; --ink:#3C2A1E; --sub:#8B7355; --gold:#C9A96E;
@@ -134,27 +134,43 @@ body{background:var(--bg);font-family:-apple-system,"PingFang SC","Microsoft YaH
 .like-note b{font-size:14px;}
 .like-note.full{color:#B4432E;background:#FFF3EE;border-color:#E6C9BE;}
 .vote-btn:disabled{opacity:0.4;cursor:not-allowed;box-shadow:none;}
+
+/* 打分排名 */
+.save-hint{font-size:11px;color:#B8A794;text-align:center;padding:2px 0 8px;}
+.rank-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:4px 0 2px;}
+.rank-grid button{border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:10px 0;font-size:17px;font-weight:700;color:var(--ink);cursor:pointer;font-family:inherit;}
+.rank-grid button small{display:block;font-size:10px;color:#B8A794;font-weight:400;margin-top:1px;}
+.rank-grid button.cur{background:var(--gold);border-color:var(--gold);color:#fff;}
+.rank-grid button.cur small{color:rgba(255,255,255,0.85);}
+.rank-grid button:active{transform:scale(0.95);}
+.rank-score{font-size:17px;font-weight:800;color:var(--ink);}
+.rank-score small{font-size:10px;color:var(--sub);font-weight:400;}
 </style>
 </head>
 <body>
 <div class="wrap">
 
   <div class="top">
-    <div class="brand">求索杯测投票<small>喜欢 = 1分 · 不喜欢 = 0分</small></div>
+    <div class="brand">求索杯测投票<small id="brandSub">喜欢 = 1分 · 不喜欢 = 0分</small></div>
     <span class="mode-pill" id="modePill">连接中</span>
   </div>
 
   <!-- 管理员台：无 s 参数进入 -->
   <div id="view-home" class="hidden">
     <div class="card">
-      <div class="admin-title">☕ 本轮投票二维码</div>
-      <div class="admin-sub">把下面的码给客人扫<br>每人给每个样品投 <b>喜欢 / 不喜欢</b><br>喜欢数量有上限（下方设置），提交前可改</div>
+      <div class="admin-title" id="adminTitle">☕ 本轮投票二维码</div>
+      <div class="admin-sub" id="adminSub">把下面的码给客人扫<br>每人给每个样品投 <b>喜欢 / 不喜欢</b><br>喜欢数量有上限（下方设置），提交前可改</div>
+      <div class="count-row">
+        <span>方式</span>
+        <select id="typeSel" onchange="onTypeChange()"></select>
+        <span class="count-note" id="typeNote">投票 / 打分排名</span>
+      </div>
       <div class="count-row">
         <span>样品数量</span>
         <select id="countSel" onchange="onCountChange()"></select>
         <span class="count-note">1 ~ 30 可选</span>
       </div>
-      <div class="count-row">
+      <div class="count-row" id="likeRowWrap">
         <span>喜欢上限</span>
         <select id="likeSel" onchange="onLikeChange()"></select>
         <span class="count-note">每人最多喜欢几个</span>
@@ -187,6 +203,7 @@ body{background:var(--bg);font-family:-apple-system,"PingFang SC","Microsoft YaH
 
   <!-- 投票视图 -->
   <div id="view-vote" class="hidden">
+    <div class="save-hint">🔒 提交后你的选择不可回看，建议截屏保存</div>
     <div class="progress-wrap">
       <div class="progress-top"><span id="progText">已投 0/20</span><span id="voteSessionTag"></span></div>
       <div class="progress-bar"><div class="progress-fill" id="progFill" style="width:0%"></div></div>
@@ -231,8 +248,8 @@ body{background:var(--bg);font-family:-apple-system,"PingFang SC","Microsoft YaH
   <div id="view-done" class="hidden">
     <div class="card">
       <div class="done-ico">✅</div>
-      <div class="done-title">投票已提交</div>
-      <div class="done-sub">感谢参与！<br>你的每一票都在帮我们选出这轮最受欢迎的豆子</div>
+      <div class="done-title" id="doneTitle">投票已提交</div>
+      <div class="done-sub" id="doneSub">感谢参与！<br>你的每一票都在帮我们选出这轮最受欢迎的豆子</div>
       <button class="btn btn-dark" onclick="showBoard()">查看实时榜单</button>
     </div>
   </div>
@@ -249,7 +266,7 @@ body{background:var(--bg);font-family:-apple-system,"PingFang SC","Microsoft YaH
 
 <div class="submit-bar hidden" id="submitBar">
   <div class="submit-inner">
-    <div class="submit-count">已投 <b id="doneCount">0</b>/<span id="totalCount">20</span></div>
+    <div class="submit-count"><span id="donePrefix">已投</span> <b id="doneCount">0</b>/<span id="totalCount">20</span></div>
     <button class="submit-btn" id="submitBtn" onclick="submitVote()">提交投票</button>
   </div>
 </div>
@@ -278,6 +295,13 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
 
   var params = new URLSearchParams(location.search);
   var sessionId = (params.get("s")||"").trim();
+
+  /* 玩法：?t=rank = 打分排名（第1名=N分），默认/缺省 = 投票。无 t 无 s（管理员台）沿用上次选择 */
+  var LS_TYPE = "cv_type";
+  var tParam = (params.get("t") || "").trim();
+  var MODE = "vote";
+  if(tParam === "rank") MODE = "rank";
+  else if(!params.has("t") && !sessionId && localStorage.getItem(LS_TYPE) === "rank") MODE = "rank";
 
   /* 样品数量：URL ?n= 优先，其次上次选择，最后用配置默认（范围 1~30） */
   var LS_COUNT = "cv_count";
@@ -350,9 +374,13 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
   }
   function doneCount(){
     var c = 0;
-    if(choices){ for(var i=0;i<N;i++){ if(choices[i]===1 || choices[i]===0) c++; } }
+    if(choices){ for(var i=0;i<N;i++){ if(choices[i] !== null) c++; } }
     return c;
   }
+  /* 链接构造：方式/上限参数统一入口 */
+  function typeQuery(){ return MODE === "rank" ? "&t=rank" : ""; }
+  function roundUrl(){ return "?s=" + sessionId + "&n=" + N + (MODE === "vote" ? ("&m=" + MAXL) : "") + typeQuery(); }
+  function urlFor(){ return location.origin + location.pathname + roundUrl(); }
 
   /* ---------- 后端抽象 ---------- */
   /* 请求超时保护：10s 无响应 abort（海外节点偶发挂起，防无限"加载中"） */
@@ -403,17 +431,17 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
   }
   function fetchAllVotes(){
     if(isDemo) return Promise.resolve(demoRows());
-    return apiGet(SUPABASE_URL + "/rest/v1/votes?select=voter_id,choices&session_id=eq." + encodeURIComponent(sessionId) + "&limit=2000");
+    return apiGet(SUPABASE_URL + "/rest/v1/votes?select=voter_id,choices,mode&session_id=eq." + encodeURIComponent(sessionId) + "&limit=2000");
   }
   /* 指定轮次数据（历史详情用） */
   function fetchVotesFor(sid){
     if(isDemo) return Promise.resolve([]);
-    return apiGet(SUPABASE_URL + "/rest/v1/votes?select=voter_id,choices&session_id=eq." + encodeURIComponent(sid) + "&limit=2000");
+    return apiGet(SUPABASE_URL + "/rest/v1/votes?select=voter_id,choices,mode&session_id=eq." + encodeURIComponent(sid) + "&limit=2000");
   }
   /* 全部轮次元数据（历史列表用） */
   function fetchAllSessions(){
     if(isDemo) return Promise.resolve([]);
-    return apiGet(SUPABASE_URL + "/rest/v1/votes?select=session_id,created_at,choices&limit=5000");
+    return apiGet(SUPABASE_URL + "/rest/v1/votes?select=session_id,created_at,choices,mode&limit=5000");
   }
   /* 删除整轮（调 PostgRPC delete_session，需先在 SQL Editor 建函数） */
   function deleteRoundApi(sid){
@@ -443,11 +471,11 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
   function insertVote(){
     if(isDemo){
       var rows = demoRows();
-      rows.push({ voter_id: voterId, choices: choices.slice(), created_at: new Date().toISOString() });
+      rows.push({ voter_id: voterId, choices: choices.slice(), mode: MODE, created_at: new Date().toISOString() });
       saveDemoRows(rows);
       return Promise.resolve();
     }
-    return apiPost(SUPABASE_URL + "/rest/v1/votes", [{ session_id: sessionId, voter_id: voterId, choices: choices }]);
+    return apiPost(SUPABASE_URL + "/rest/v1/votes", [{ session_id: sessionId, voter_id: voterId, choices: choices, mode: MODE }]);
   }
 
   /* ---------- 视图切换 ---------- */
@@ -504,17 +532,55 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
     MAXL = Math.max(1, Math.min(v, N));
     localStorage.setItem(LS_MAX, String(MAXL));
     sessionId = genSession();
-    history.replaceState(null, "", "?s=" + sessionId + "&n=" + N + "&m=" + MAXL);
+    history.replaceState(null, "", roundUrl());
     choices = null;
     localStorage.removeItem(draftKey());
     renderHome();
     toast("已用「每人最多喜欢 " + MAXL + " 个」开启新一轮");
   }
+  function typeLabel(v){ return v === "rank" ? "🏆 打分排名" : "👍 投票"; }
+  function fillTypeSel(){
+    var sel = $("typeSel");
+    if(!sel) return;
+    sel.innerHTML = "";
+    [["vote","👍 投票（喜欢/不喜欢）"],["rank","🏆 打分排名（第1名满分）"]].forEach(function(pair){
+      var o = document.createElement("option");
+      o.value = pair[0];
+      o.textContent = pair[1];
+      if(pair[0] === MODE) o.selected = true;
+      sel.appendChild(o);
+    });
+  }
+  function onTypeChange(){
+    var v = $("typeSel").value;
+    if(v === MODE) return;
+    MODE = v;
+    localStorage.setItem(LS_TYPE, MODE);
+    sessionId = genSession();
+    history.replaceState(null, "", roundUrl());
+    choices = null;
+    localStorage.removeItem(draftKey());
+    renderHome();
+    toast("已切换「" + typeLabel(MODE) + "」，生成了新一轮二维码");
+  }
+  function updateBrandSub(){
+    var el = document.querySelector(".brand small");
+    if(el) el.textContent = (MODE === "rank") ? ("第1名 = " + N + "分 · 最后1分") : "喜欢 = 1分 · 不喜欢 = 0分";
+  }
   function renderHome(){
     showView("view-home");
     fillCountSel();
     fillLikeSel();
-    var link = location.origin + location.pathname + "?s=" + sessionId + "&n=" + N + "&m=" + MAXL;
+    fillTypeSel();
+    var isRank = MODE === "rank";
+    var likeRow = $("likeRowWrap");
+    if(likeRow) likeRow.classList.toggle("hidden", isRank);
+    $("adminTitle").textContent = isRank ? "🏆 本轮打分二维码" : "☕ 本轮投票二维码";
+    $("adminSub").innerHTML = isRank
+      ? "把下面的码给客人扫<br>客人给 <b>" + N + " 个样品排名：第1名 " + N + " 分，最后1分</b><br>从最好喝的开始依次选，提交前可改"
+      : "把下面的码给客人扫<br>每人给每个样品投 <b>喜欢 / 不喜欢</b><br>喜欢数量有上限（下方设置），提交前可改";
+    updateBrandSub();
+    var link = urlFor();
     $("voteLink").value = link;
     drawQr(link);
     var mode = $("modePill");
@@ -553,7 +619,7 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
   function newRound(){
     if(!confirm("确定开新一轮？\n当前轮的投票数据会保留，新客人扫新码进入新一轮，榜单互不影响。")) return;
     sessionId = genSession();
-    history.replaceState(null, "", "?s=" + sessionId + "&n=" + N + "&m=" + MAXL);
+    history.replaceState(null, "", roundUrl());
     choices = null;
     localStorage.removeItem(draftKey());
     renderHome();
@@ -566,7 +632,7 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
     localStorage.setItem(LS_COUNT, String(N));
     if(MAXL > N) MAXL = N;
     sessionId = genSession();
-    history.replaceState(null, "", "?s=" + sessionId + "&n=" + N + "&m=" + MAXL);
+    history.replaceState(null, "", roundUrl());
     choices = null;
     localStorage.removeItem(draftKey());
     renderHome();
@@ -576,38 +642,65 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
     if(!isDemo) return;
     var names = [genId(), genId(), genId()];
     names.forEach(function(vid, idx){
-      var arr = new Array(N).fill(0);
-      /* 喜欢数不超过上限；上限=全部时模拟约 6 成喜欢，否则按上限投 */
-      var budget = Math.min(MAXL, N);
-      if(MAXL >= N){ budget = Math.max(1, Math.round(N * 0.6)); }
-      if(budget > N) budget = N;
-      /* 加权无放回抽样：越靠前越容易被喜欢（模拟真实梯度） */
-      var w = [], W = 0;
-      for(var i=0;i<N;i++){
-        var base = 0.85 - (i / N) * 0.75;
-        var wave = ((idx * 7 + i * 3) % 5) / 20;
-        var bw = base + wave; if(bw < 0.03) bw = 0.03;
-        w.push(bw); W += bw;
-      }
-      var got = 0;
-      while(got < budget){
-        var r = Math.random() * W;
-        var acc = 0, hit = -1;
+      if(MODE === "rank"){
+        /* 打分：加权序贯抽取生成 1..N 全排列名次（越靠前越可能拿好名次，模拟真实梯度） */
+        var arr = new Array(N).fill(null);
+        var w = [], W = 0;
         for(var i=0;i<N;i++){
-          if(w[i] <= 0) continue;
-          acc += w[i];
-          if(r <= acc){ hit = i; break; }
+          var base = 0.85 - (i / N) * 0.75;
+          var wave = ((idx * 7 + i * 3) % 5) / 20;
+          var bw = base + wave; if(bw < 0.03) bw = 0.03;
+          w.push(bw); W += bw;
         }
-        if(hit < 0){ for(var j=0;j<N;j++){ if(w[j] > 0){ hit = j; break; } } }
-        if(hit < 0) break;
-        arr[hit] = 1;
-        W -= w[hit]; w[hit] = 0; got++;
+        for(var k=1;k<=N;k++){
+          var rr = Math.random() * W, acc = 0, hit = -1;
+          for(var i=0;i<N;i++){
+            if(w[i] <= 0) continue;
+            acc += w[i];
+            if(rr <= acc){ hit = i; break; }
+          }
+          if(hit < 0){ for(var j=0;j<N;j++){ if(w[j] > 0){ hit = j; break; } } }
+          if(hit < 0) break;
+          arr[hit] = k;
+          W -= w[hit]; w[hit] = 0;
+        }
+        var rows = demoRows();
+        rows.push({ voter_id: vid, choices: arr, mode: "rank", created_at: new Date().toISOString() });
+        saveDemoRows(rows);
+      } else {
+        var arr = new Array(N).fill(0);
+        /* 喜欢数不超过上限；上限=全部时模拟约 6 成喜欢，否则按上限投 */
+        var budget = Math.min(MAXL, N);
+        if(MAXL >= N){ budget = Math.max(1, Math.round(N * 0.6)); }
+        if(budget > N) budget = N;
+        /* 加权无放回抽样：越靠前越容易被喜欢（模拟真实梯度） */
+        var w2 = [], W2 = 0;
+        for(var i=0;i<N;i++){
+          var base = 0.85 - (i / N) * 0.75;
+          var wave = ((idx * 7 + i * 3) % 5) / 20;
+          var bw = base + wave; if(bw < 0.03) bw = 0.03;
+          w2.push(bw); W2 += bw;
+        }
+        var got = 0;
+        while(got < budget){
+          var r2 = Math.random() * W2;
+          var acc2 = 0, hit2 = -1;
+          for(var i=0;i<N;i++){
+            if(w2[i] <= 0) continue;
+            acc2 += w2[i];
+            if(r2 <= acc2){ hit2 = i; break; }
+          }
+          if(hit2 < 0){ for(var j=0;j<N;j++){ if(w2[j] > 0){ hit2 = j; break; } } }
+          if(hit2 < 0) break;
+          arr[hit2] = 1;
+          W2 -= w2[hit2]; w2[hit2] = 0; got++;
+        }
+        var rows = demoRows();
+        rows.push({ voter_id: vid, choices: arr, mode: "vote", created_at: new Date().toISOString() });
+        saveDemoRows(rows);
       }
-      var rows = demoRows();
-      rows.push({ voter_id: vid, choices: arr, created_at: new Date().toISOString() });
-      saveDemoRows(rows);
     });
-    toast("已填充 3 位演示投票（每人喜欢 ≤ " + MAXL + "）");
+    toast(MODE === "rank" ? "已填充 3 位演示打分（每人排满 1~" + N + " 名）" : "已填充 3 位演示投票（每人喜欢 ≤ " + MAXL + "）");
     if(!$("view-board").classList.contains("hidden")) refreshBoard();
   }
 
@@ -615,6 +708,7 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
   var curIdx = 0;
   function renderVote(){
     showView("view-vote");
+    updateBrandSub();
     if(!choices){ choices = new Array(N).fill(null); saveDraft(); }
     curIdx = 0;
     for(var i=0;i<N;i++){ if(choices[i]===null){ curIdx = i; break; } }
@@ -629,14 +723,20 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
     var html = "";
     for(var i=0;i<N;i++){
       var cls = "chip";
-      if(choices && choices[i]===1) cls += " done liked";
-      else if(choices && choices[i]===0) cls += " done";
+      var txt = pad2(i+1);
+      if(MODE === "rank"){
+        if(choices && choices[i] !== null){ cls += " done"; txt = String(choices[i]); }
+      } else {
+        if(choices && choices[i]===1) cls += " done liked";
+        else if(choices && choices[i]===0) cls += " done";
+      }
       if(i===curIdx) cls += " cur";
-      html += '<div class="'+cls+'" onclick="Vote.jump('+i+')">'+pad2(i+1)+'</div>';
+      html += '<div class="'+cls+'" onclick="Vote.jump('+i+')">'+txt+'</div>';
     }
     box.innerHTML = html;
   }
   function renderCur(){
+    if(MODE === "rank"){ renderRankCur(); return; }
     var card = $("voteCard");
     if(curIdx >= N){
       card.innerHTML = '<div class="sample-label">全部投完啦</div><div class="sample-no" style="font-size:34px">🎉</div><div class="sample-hint">检查一下有没有要改的，确认后点下方「提交投票」<br>提交后不能再改</div>';
@@ -677,13 +777,25 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
   }
   function updateBar(){
     var d = doneCount();
-    $("progText").textContent = "已投 " + d + "/" + N;
+    var isRank = MODE === "rank";
+    var label = isRank ? "已排" : "已投";
+    $("progText").textContent = label + " " + d + "/" + N;
     $("progFill").style.width = (d/N*100) + "%";
+    var dp = $("donePrefix"); if(dp) dp.textContent = label;
     $("doneCount").textContent = d;
     $("totalCount").textContent = N;
     var btn = $("submitBtn");
-    btn.classList.toggle("ok", d === N);
-    btn.disabled = d === 0;
+    if(isRank){
+      btn.classList.toggle("ok", d === N);
+      btn.disabled = d < N;
+      btn.textContent = (d === N) ? "提交打分" : "还差 " + (N-d) + " 个样品没排";
+    } else {
+      btn.classList.toggle("ok", d === N);
+      btn.disabled = d === 0;
+      btn.textContent = "提交投票";
+    }
+    var tag = $("voteSessionTag");
+    if(tag) tag.textContent = isRank ? "🏆 名次制" : "";
   }
   function countLikes(){
     var c = 0;
@@ -693,6 +805,7 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
   function updateLikeNote(){
     var el = $("likeNote");
     if(!el) return;
+    if(MODE !== "vote"){ el.classList.add("hidden"); return; }
     if(MAXL >= N){ el.classList.add("hidden"); return; }
     var k = countLikes();
     var full = k >= MAXL;
@@ -727,8 +840,100 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
     renderChips();
     renderCur();
   }
+  /* ---------- 打分排名 ---------- */
+  function rankNextK(){ return doneCount() + 1; }
+  function rankAssign(){
+    if(MODE !== "rank" || curIdx >= N) return;
+    var k = rankNextK();
+    if(k > N){ toast("全部样品都已有名次"); return; }
+    var sampleNo = curIdx + 1;
+    choices[curIdx] = k;
+    saveDraft();
+    var next = -1;
+    for(var i=0;i<N;i++){ if(choices[i] === null){ next = i; break; } }
+    curIdx = (next < 0) ? N : next;
+    renderChips();
+    renderCur();
+    updateBar();
+    updateLikeNote();
+    toast("样品 " + pad2(sampleNo) + " → 第 " + k + " 名（" + (N - k + 1) + " 分）");
+    if(curIdx >= N) toast("全部排好啦，检查后提交");
+  }
+  function rankSet(b){
+    if(MODE !== "rank" || curIdx >= N) return;
+    b = parseInt(b, 10);
+    var a = choices[curIdx];
+    if(a === null){ toast("它还没排名"); return; }
+    if(b === a){ toast("它已经在第 " + a + " 名"); return; }
+    var m = doneCount();
+    if(!(b >= 1 && b <= m)){ toast("现在只能在第 1 ~ " + m + " 名里调，排满后可任意调"); return; }
+    var order = [];
+    for(var i=0;i<N;i++){ if(choices[i] !== null) order.push(i); }
+    order.sort(function(x,y){ return choices[x] - choices[y]; });
+    order.splice(order.indexOf(curIdx), 1);
+    order.splice(b - 1, 0, curIdx);
+    for(var j=0;j<order.length;j++){ choices[order[j]] = j + 1; }
+    saveDraft();
+    renderChips();
+    renderCur();
+    updateBar();
+    toast("样品 " + pad2(curIdx+1) + " 已调到第 " + b + " 名");
+  }
+  function rankReset(){
+    if(MODE !== "rank") return;
+    if(!confirm("清空全部名次重新排？")) return;
+    for(var i=0;i<N;i++){ if(choices) choices[i] = null; }
+    saveDraft();
+    curIdx = 0;
+    renderChips();
+    renderCur();
+    updateBar();
+    toast("已清空，重新从第 1 名开始排");
+  }
+  function renderRankCur(){
+    var card = $("voteCard");
+    if(curIdx >= N){
+      card.innerHTML =
+        '<div class="sample-label">全部排好啦</div>' +
+        '<div class="sample-no" style="font-size:34px">🎉</div>' +
+        '<div class="sample-hint">圆点数字 = 名次，点它可改<br>确认后点下方「提交打分」</div>' +
+        '<div class="btnrow"><button class="btn btn-ghost" onclick="Rank.reset()">↺ 全部重排</button></div>';
+      return;
+    }
+    var no = curIdx + 1;
+    var r = choices[curIdx];
+    if(r === null){
+      var k = rankNextK();
+      var score = N - k + 1;
+      card.innerHTML =
+        '<div class="sample-label">样品 ' + pad2(no) + ' / ' + N + '</div>' +
+        '<div class="sample-no">' + pad2(no) + '</div>' +
+        '<div class="sample-hint">还没排名 · 当前待定第 ' + k + ' 名<br>从剩下没排的样品里挑最好喝的</div>' +
+        '<div class="vote-btns">' +
+          '<button class="vote-btn like" onclick="Rank.assign()"><span class="ico">🏅</span>评为第 ' + k + ' 名（' + score + ' 分）</button>' +
+        '</div>' +
+        '<div class="auto-next">也可以先点上方其它编号，随时回来排</div>';
+    } else {
+      var m = doneCount();
+      var grid = "";
+      for(var b=1;b<=m;b++){
+        var scr = N - b + 1;
+        grid += '<button class="' + (b===r ? "cur" : "") + '" onclick="Rank.set(' + b + ')">' + b + '<small>' + scr + ' 分</small></button>';
+      }
+      card.innerHTML =
+        '<div class="sample-label">样品 ' + pad2(no) + ' / ' + N + '</div>' +
+        '<div class="sample-no" style="font-size:34px">' + pad2(no) + '</div>' +
+        '<div class="sample-hint">当前第 <b>' + r + '</b> 名 · 想改成第几名？<br>改完其它样品会自动让位顺延</div>' +
+        '<div class="rank-grid">' + grid + '</div>' +
+        '<div class="auto-next">点上方其它编号继续查看 / 修改</div>';
+    }
+  }
   function goVote(){ renderVote(); }
   function submitVote(){
+    if(MODE === "rank"){
+      var missR = N - doneCount();
+      if(missR > 0){ toast("还有 " + missR + " 个样品没排名，排完才能提交"); return; }
+    }
     if(MAXL < N && countLikes() > MAXL){
       toast("喜欢的样品超过上限 " + MAXL + "，请把超出的改成「不喜欢」再提交");
       return;
@@ -770,6 +975,12 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
     });
   }
   function showDone(){
+    var isRank = MODE === "rank";
+    var t = $("doneTitle"), s = $("doneSub");
+    if(t) t.textContent = isRank ? "打分已提交" : "投票已提交";
+    if(s) s.innerHTML = isRank
+      ? "感谢参与！<br>你的排名已记录，榜单按名次分实时更新"
+      : "感谢参与！<br>你的每一票都在帮我们选出这轮最受欢迎的豆子";
     $("submitBar").classList.add("hidden");
     showView("view-done");
   }
@@ -800,10 +1011,12 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
   function manualBoardRefresh(){ refreshBoard(); }
   function refreshBoard(){
     fetchAllVotes().then(function(rows){
-      lastBoard = { rows: rows || [], sid: sessionId };
+      lastBoard = { rows: rows || [], sid: sessionId, mode: MODE };
+      var emptyHtml = (MODE === "rank")
+        ? '<div class="empty">还没有人打分<br>先来排个名吧 🏆</div>'
+        : '<div class="empty">还没有人投票<br>先投出你的第一票吧 ☕</div>';
       renderRankInto($("boardList"), $("boardHead"), rows || [], sessionId,
-        '本轮 <b>' + esc(sessionId) + '</b>',
-        '<div class="empty">还没有人投票<br>先投出你的第一票吧 ☕</div>');
+        '本轮 <b>' + esc(sessionId) + '</b>', emptyHtml);
       markUpdated($("boardHead"));
     }).catch(function(err){
       $("boardHead").textContent = "榜单加载失败，检查网络后下拉重试";
@@ -837,14 +1050,16 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
   }
   function buildBoardSummaryText(){
     if(!lastBoard || lastBoard.rows.length === 0) return "";
+    var isRank = lastBoard.mode === "rank";
     var lines = [];
-    lines.push("【求索杯测投票结果】轮次 " + lastBoard.sid + " · " + lastBoard.rows.length + " 人参与");
-    lines.push("（喜欢=1分 · 按喜欢票数排名）");
+    lines.push("【求索杯测" + (isRank ? "打分" : "投票") + "结果】轮次 " + lastBoard.sid + " · " + lastBoard.rows.length + " 人参与");
+    lines.push(isRank ? "（名次分制：第1名满分 · 按总分排名）" : "（喜欢=1分 · 按喜欢票数排名）");
     var items = document.querySelectorAll("#boardList .rank-item");
     items.forEach(function(el){
       var name = el.querySelector(".rank-name") ? el.querySelector(".rank-name").textContent.replace(/\s+/g, " ").trim() : "";
-      var like = el.querySelector(".rank-likes") ? el.querySelector(".rank-likes").textContent.trim() : "";
-      lines.push("· " + name + " — " + like);
+      var scoreEl = el.querySelector(".rank-score") || el.querySelector(".rank-likes");
+      var val = scoreEl ? scoreEl.textContent.trim() : "";
+      lines.push("· " + name + " — " + val);
     });
     return lines.join("\n");
   }
@@ -853,48 +1068,66 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
     if(!text){ toast("榜单还没有数据"); return; }
     copyTextToClipboard(text);
   }
-  /* 通用榜单渲染：listEl 榜单项容器 / headEl 头部 / rows 投票记录 / sid 仅作展示 / headPrefix 轮次前缀 */
+  /* 通用榜单渲染：listEl 榜单项容器 / headEl 头部 / rows 记录 / sid 展示 / headPrefix 前缀 / emptyHtml 空态 */
   function renderRankInto(listEl, headEl, rows, sid, headPrefix, emptyHtml){
     var participants = rows.length;
+    /* 模式：从记录自带 mode 推断（老数据无 mode = 投票） */
+    var bmode = "vote";
+    for(var mi=0; mi<rows.length; mi++){
+      if(rows[mi] && (rows[mi].mode === "rank" || rows[mi].mode === "vote")){ bmode = rows[mi].mode; break; }
+    }
     /* 样品数从第一条有效记录推断（历史轮次的 N 可能与当前不同） */
     var n = 0;
     for(var ri=0; ri<rows.length; ri++){
-      if(Array.isArray(rows[ri].choices)){ n = rows[ri].choices.length; break; }
+      if(rows[ri] && Array.isArray(rows[ri].choices)){ n = rows[ri].choices.length; break; }
     }
     if(!(n >= 1)) n = N;
-    headEl.innerHTML = headPrefix + ' · ' + participants + ' 人已投 · ' + n + ' 样品<br>分数 = 喜欢票数（喜欢1分 / 不喜欢0分）';
+    var isRank = (bmode === "rank");
+    headEl.innerHTML = headPrefix + ' · ' + participants + (isRank ? ' 人打分' : ' 人已投') + ' · ' + n + ' 样品<br>' +
+      (isRank ? ('分数 = 名次分相加（第1名 ' + n + ' 分 → 最后1名1分）') : '分数 = 喜欢票数（喜欢1分 / 不喜欢0分）');
     if(participants === 0){
       listEl.innerHTML = emptyHtml || '<div class="empty">暂无数据</div>';
       return;
     }
+    var scores = new Array(n).fill(0);
     var likes = new Array(n).fill(0);
     var dislikes = new Array(n).fill(0);
     rows.forEach(function(r){
       var c = r.choices;
       if(!Array.isArray(c)) return;
       for(var i=0;i<n && i<c.length;i++){
-        if(c[i]===1) likes[i]++;
-        else if(c[i]===0) dislikes[i]++;
+        if(isRank){
+          var rk = parseInt(c[i], 10);
+          if(rk >= 1 && rk <= n) scores[i] += (n - rk + 1);
+        } else {
+          if(c[i]===1) likes[i]++;
+          else if(c[i]===0) dislikes[i]++;
+        }
       }
     });
     var list = [];
-    for(var i=0;i<n;i++){ list.push({ idx:i, likes:likes[i], dislikes:dislikes[i] }); }
-    list.sort(function(a,b){ return b.likes - a.likes || a.idx - b.idx; });
+    for(var i=0;i<n;i++){
+      list.push(isRank
+        ? { idx:i, v:scores[i], sub:(participants ? (scores[i]/participants) : 0) }
+        : { idx:i, v:likes[i], dislikes:dislikes[i] });
+    }
+    list.sort(function(a,b){ return b.v - a.v || a.idx - b.idx; });
     var html = "";
-    var lastLikes = -1, rank = 0;
+    var lastV = -1, rank = 0;
     for(var k=0;k<list.length;k++){
       var it = list[k];
-      if(it.likes !== lastLikes){ rank = k + 1; lastLikes = it.likes; }
+      if(it.v !== lastV){ rank = k + 1; lastV = it.v; }
       var cls = "normal";
       if(rank===1) cls="top1"; else if(rank===2) cls="top2"; else if(rank===3) cls="top3";
-      var maxLikes = list[0].likes || 1;
-      var pct = (it.likes / maxLikes * 100) + "%";
+      var maxV = list[0].v || 1;
+      var pct = (it.v / maxV * 100) + "%";
+      var nums = isRank
+        ? '<div class="rank-nums"><div class="rank-score">' + it.v + ' <small>分</small></div><div class="rank-dislikes">均 ' + it.sub.toFixed(1) + '</div></div>'
+        : '<div class="rank-nums"><div class="rank-likes">' + it.v + ' <small>喜欢</small></div><div class="rank-dislikes">👎 ' + it.dislikes + '</div></div>';
       html += '<div class="rank-item">' +
         '<div class="rank-pos '+cls+'">' + (rank===1?"🥇":rank===2?"🥈":rank===3?"🥉":rank) + '</div>' +
         '<div class="rank-main"><div class="rank-name">样品 ' + pad2(it.idx+1) + '</div>' +
-        '<div class="rank-bar"><div class="rank-fill" style="width:'+pct+'"></div></div></div>' +
-        '<div class="rank-nums"><div class="rank-likes">' + it.likes + ' <small>喜欢</small></div>' +
-        '<div class="rank-dislikes">👎 ' + it.dislikes + '</div></div>' +
+        '<div class="rank-bar"><div class="rank-fill" style="width:'+pct+'"></div></div></div>' + nums +
       '</div>';
     }
     listEl.innerHTML = html;
@@ -932,14 +1165,15 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
       (rows || []).forEach(function(r){
         var sid = r.session_id;
         if(!sid) return;
-        if(!groups[sid]) groups[sid] = { count: 0, ts: r.created_at || "", n: 0 };
+        if(!groups[sid]) groups[sid] = { count: 0, ts: r.created_at || "", n: 0, mode: "vote" };
         var g = groups[sid];
         g.count++;
         if(r.created_at && (!g.ts || r.created_at < g.ts)) g.ts = r.created_at;
         if(!g.n && Array.isArray(r.choices)) g.n = r.choices.length;
+        if(r.mode === "rank" || r.mode === "vote") g.mode = r.mode;
       });
       var arr = Object.keys(groups).map(function(sid){
-        return { sid: sid, count: groups[sid].count, ts: groups[sid].ts, n: groups[sid].n };
+        return { sid: sid, count: groups[sid].count, ts: groups[sid].ts, n: groups[sid].n, mode: groups[sid].mode };
       });
       arr.sort(function(a,b){ return (b.ts||"").localeCompare(a.ts||""); });
       histSessions = arr;
@@ -954,7 +1188,7 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
         html += '<div class="hist-item" onclick="openHistoryDetail(\'' + g.sid + '\')">' +
           '<div class="hi-main">' +
             '<div class="hi-time">' + esc(tsTxt) + nowTag + '</div>' +
-            '<div class="hi-sub">' + g.count + ' 人投票 · ' + g.n + ' 样品' + (g.sid===sessionId ? ' · 正在进行的轮次' : '') + '</div>' +
+            '<div class="hi-sub">' + (g.mode === "rank" ? "🏆 打分" : "👍 投票") + ' · ' + g.count + ' 人 · ' + g.n + ' 样品' + (g.sid===sessionId ? ' · 进行中' : '') + '</div>' +
           '</div>' +
           '<div class="hi-go">查看 ›</div>' +
         '</div>';
@@ -1040,7 +1274,7 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
     if(!sessionId){
       /* 管理员入口：无 s 自动开一轮 */
       sessionId = genSession();
-      history.replaceState(null, "", "?s=" + sessionId + "&n=" + N + "&m=" + MAXL);
+      history.replaceState(null, "", roundUrl());
       choices = null;
       renderHome();
       return;
@@ -1054,11 +1288,13 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
     hist: function(){ showHistory(); }
   };
   window.Vote = { pick: pick, jump: jump };
+  window.Rank = { assign: rankAssign, set: rankSet, reset: rankReset };
   window.seedDemo = seedDemo;
   window.copyLink = copyLink;
   window.newRound = newRound;
   window.onCountChange = onCountChange;
   window.onLikeChange = onLikeChange;
+  window.onTypeChange = onTypeChange;
   window.goVote = goVote;
   window.showBoard = showBoard;
   window.submitVote = submitVote;
