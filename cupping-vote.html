@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>求索杯测投票</title>
-<meta name="version" content="v0.4.0-maxlike">
+<meta name="version" content="v0.4.1-chiplike">
 <style>
 :root{
   --bg:#F5F0EB; --card:#FFFFFF; --ink:#3C2A1E; --sub:#8B7355; --gold:#C9A96E;
@@ -59,6 +59,7 @@ body{background:var(--bg);font-family:-apple-system,"PingFang SC","Microsoft YaH
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 16px;}
 .chip{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;background:#fff;border:1.5px solid var(--line);color:var(--sub);cursor:pointer;}
 .chip.done{background:var(--ink);border-color:var(--ink);color:#fff;}
+.chip.done.liked{background:#C0392B;border-color:#C0392B;color:#fff;}
 .chip.cur{outline:2px solid var(--gold);outline-offset:1px;}
 .vote-card{background:var(--card);border-radius:20px;box-shadow:0 6px 24px rgba(60,42,30,0.10);padding:30px 22px 26px;text-align:center;margin-bottom:14px;}
 .sample-label{font-size:13px;color:var(--sub);letter-spacing:2px;}
@@ -628,7 +629,8 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
     var html = "";
     for(var i=0;i<N;i++){
       var cls = "chip";
-      if(choices && (choices[i]===1||choices[i]===0)) cls += " done";
+      if(choices && choices[i]===1) cls += " done liked";
+      else if(choices && choices[i]===0) cls += " done";
       if(i===curIdx) cls += " cur";
       html += '<div class="'+cls+'" onclick="Vote.jump('+i+')">'+pad2(i+1)+'</div>';
     }
