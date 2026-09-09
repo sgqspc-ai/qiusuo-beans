@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>求索杯测投票</title>
-<meta name="version" content="v0.5.0-rank">
+<meta name="version" content="v0.5.1-deletekey">
 <style>
 :root{
   --bg:#F5F0EB; --card:#FFFFFF; --ink:#3C2A1E; --sub:#8B7355; --gold:#C9A96E;
@@ -280,6 +280,8 @@ body{background:var(--bg);font-family:-apple-system,"PingFang SC","Microsoft YaH
 <script>
 /* 样品数量：默认 20，可改 1~30 */
 var SAMPLE_COUNT = 20;
+/* 管理员删除口令：删除历史轮次必须输入这个口令（前后端双重校验） */
+var ADMIN_KEY = "fc8186008";
 /* Supabase 配置：注册后把 URL 和 anon key 填进来，留空 = 演示模式（数据只存本机） */
 var SUPABASE_URL = "https://ucweqaaaclpucgxbvajw.supabase.co";
 var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
@@ -443,8 +445,8 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
     if(isDemo) return Promise.resolve([]);
     return apiGet(SUPABASE_URL + "/rest/v1/votes?select=session_id,created_at,choices,mode&limit=5000");
   }
-  /* 删除整轮（调 PostgRPC delete_session，需先在 SQL Editor 建函数） */
-  function deleteRoundApi(sid){
+  /* 删除整轮（调 PostgRPC delete_session，需先在 SQL Editor 建函数；带管理口令，后端校验） */
+  function deleteRoundApi(sid, key){
     if(isDemo) return Promise.reject(new Error("演示模式不支持删除"));
     return retryFetch(function(){
       return fetch(SUPABASE_URL + "/rest/v1/rpc/delete_session", {
@@ -453,7 +455,7 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
           "apikey": SUPABASE_ANON_KEY, "Authorization": "Bearer " + SUPABASE_ANON_KEY,
           "Content-Type": "application/json", "Prefer": "return=minimal"
         },
-        body: JSON.stringify({ p_session: sid })
+        body: JSON.stringify({ p_session: sid, p_key: key })
       }).then(function(r){
         if(!r.ok){ var e = new Error("POST " + r.status); e.status = r.status; throw e; }
         return r;
@@ -1234,14 +1236,23 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
     var delRow = $("histDelRow");
     if(delRow && delRow.dataset.info) info = delRow.dataset.info;
     if(!confirm("确定删除" + info + "？\n删除后不可恢复，请确认。")) return;
-    deleteRoundApi(sid).then(function(){
+    var key = prompt("输入管理口令后才能删除", "");
+    if(!key){ toast("已取消删除"); return; }
+    if(key !== ADMIN_KEY){
+      toast("口令不对，删除已取消");
+      return;
+    }
+    deleteRoundApi(sid, key).then(function(){
       toast("已删除该轮");
       histSessions = histSessions.filter(function(g){ return g.sid !== sid; });
       backList();
     }).catch(function(err){
       var msg = String(err && err.message || err);
-      if(msg.indexOf("404") >= 0 || msg.indexOf("Could not find the function") >= 0){
-        toast("删除功能未启用：需要先在 Supabase SQL Editor 跑一段配置 SQL");
+      var st = err && err.status;
+      if(msg.indexOf("404") >= 0 || msg.indexOf("Could not find the function") >= 0 || msg.indexOf("function delete_session") >= 0){
+        toast("删除未配置：需要先在 Supabase SQL Editor 跑新的管理口令 SQL");
+      } else if(st === 400 || msg.indexOf("400") >= 0 || msg.indexOf("unauthorized") >= 0){
+        toast("后端校验失败：口令错误或无权删除");
       } else {
         toast("删除失败，请检查网络后重试");
       }
