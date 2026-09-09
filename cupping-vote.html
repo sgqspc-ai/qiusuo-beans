@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>求索杯测投票</title>
-<meta name="version" content="v0.3.4-updatetime">
+<meta name="version" content="v0.4.0-maxlike">
 <style>
 :root{
   --bg:#F5F0EB; --card:#FFFFFF; --ink:#3C2A1E; --sub:#8B7355; --gold:#C9A96E;
@@ -127,6 +127,12 @@ body{background:var(--bg);font-family:-apple-system,"PingFang SC","Microsoft YaH
 /* 提示条 */
 .toast{position:fixed;top:14px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;font-size:13px;padding:10px 18px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,0.2);z-index:99;opacity:0;pointer-events:none;transition:opacity .25s;white-space:nowrap;max-width:90vw;overflow:hidden;text-overflow:ellipsis;}
 .toast.show{opacity:1;}
+
+/* 喜欢数量上限提示 */
+.like-note{font-size:12px;color:var(--good);background:var(--good-bg);border:1px solid #CDE0D3;border-radius:10px;padding:8px 12px;margin-bottom:10px;text-align:center;line-height:1.5;}
+.like-note b{font-size:14px;}
+.like-note.full{color:#B4432E;background:#FFF3EE;border-color:#E6C9BE;}
+.vote-btn:disabled{opacity:0.4;cursor:not-allowed;box-shadow:none;}
 </style>
 </head>
 <body>
@@ -141,11 +147,16 @@ body{background:var(--bg);font-family:-apple-system,"PingFang SC","Microsoft YaH
   <div id="view-home" class="hidden">
     <div class="card">
       <div class="admin-title">☕ 本轮投票二维码</div>
-      <div class="admin-sub">把下面的码给客人扫<br>每人给每个样品投 <b>喜欢 / 不喜欢</b>，提交前可改</div>
+      <div class="admin-sub">把下面的码给客人扫<br>每人给每个样品投 <b>喜欢 / 不喜欢</b><br>喜欢数量有上限（下方设置），提交前可改</div>
       <div class="count-row">
         <span>样品数量</span>
         <select id="countSel" onchange="onCountChange()"></select>
         <span class="count-note">1 ~ 30 可选</span>
+      </div>
+      <div class="count-row">
+        <span>喜欢上限</span>
+        <select id="likeSel" onchange="onLikeChange()"></select>
+        <span class="count-note">每人最多喜欢几个</span>
       </div>
       <div class="qr-box">
         <div id="qrBox"></div>
@@ -179,6 +190,7 @@ body{background:var(--bg);font-family:-apple-system,"PingFang SC","Microsoft YaH
       <div class="progress-top"><span id="progText">已投 0/20</span><span id="voteSessionTag"></span></div>
       <div class="progress-bar"><div class="progress-fill" id="progFill" style="width:0%"></div></div>
     </div>
+    <div class="like-note hidden" id="likeNote"></div>
     <div class="chips" id="chips"></div>
     <div class="vote-card" id="voteCard"></div>
   </div>
@@ -278,6 +290,24 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
     else { N = Math.min(Math.max(parseInt(SAMPLE_COUNT,10)||20,1),30); }
   }
   localStorage.setItem(LS_COUNT, String(N));
+
+  /* 喜欢票上限：URL ?m= 优先，其次上次设置，最后默认样品数*0.4（20→8） */
+  var LS_MAX = "cv_max";
+  function defaultMaxLikes(n){
+    var d = Math.round((n || 1) * 0.4);
+    if(d < 1) d = 1;
+    if(d > n) d = n;
+    return d;
+  }
+  var MAXL = defaultMaxLikes(N);
+  var urlM = parseInt(params.get("m"), 10);
+  if(urlM >= 1){ MAXL = Math.min(urlM, N); }
+  else {
+    var savedMax = parseInt(localStorage.getItem(LS_MAX) || "0", 10);
+    if(savedMax >= 1) MAXL = Math.min(savedMax, N);
+    else MAXL = defaultMaxLikes(N);
+  }
+  MAXL = Math.max(1, MAXL);
 
   var voterId = localStorage.getItem(LS_VOTER);
   if(!voterId){ voterId = genId(); localStorage.setItem(LS_VOTER, voterId); }
@@ -453,10 +483,37 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
       sel.appendChild(o);
     }
   }
+  function fillLikeSel(){
+    var sel = $("likeSel");
+    if(!sel) return;
+    if(MAXL < 1) MAXL = 1;
+    if(MAXL > N) MAXL = N;
+    sel.innerHTML = "";
+    for(var i=1;i<=N;i++){
+      var o = document.createElement("option");
+      o.value = String(i);
+      o.textContent = (i === N) ? ("全部 " + i + " 个（不限制）") : ("最多 " + i + " 个");
+      if(i === MAXL) o.selected = true;
+      sel.appendChild(o);
+    }
+  }
+  function onLikeChange(){
+    var v = parseInt($("likeSel").value, 10);
+    if(!(v >= 1) || v === MAXL) return;
+    MAXL = Math.max(1, Math.min(v, N));
+    localStorage.setItem(LS_MAX, String(MAXL));
+    sessionId = genSession();
+    history.replaceState(null, "", "?s=" + sessionId + "&n=" + N + "&m=" + MAXL);
+    choices = null;
+    localStorage.removeItem(draftKey());
+    renderHome();
+    toast("已用「每人最多喜欢 " + MAXL + " 个」开启新一轮");
+  }
   function renderHome(){
     showView("view-home");
     fillCountSel();
-    var link = location.origin + location.pathname + "?s=" + sessionId + "&n=" + N;
+    fillLikeSel();
+    var link = location.origin + location.pathname + "?s=" + sessionId + "&n=" + N + "&m=" + MAXL;
     $("voteLink").value = link;
     drawQr(link);
     var mode = $("modePill");
@@ -495,7 +552,7 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
   function newRound(){
     if(!confirm("确定开新一轮？\n当前轮的投票数据会保留，新客人扫新码进入新一轮，榜单互不影响。")) return;
     sessionId = genSession();
-    history.replaceState(null, "", "?s=" + sessionId + "&n=" + N);
+    history.replaceState(null, "", "?s=" + sessionId + "&n=" + N + "&m=" + MAXL);
     choices = null;
     localStorage.removeItem(draftKey());
     renderHome();
@@ -506,8 +563,9 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
     if(!(v >= 1 && v <= 30) || v === N) return;
     N = v;
     localStorage.setItem(LS_COUNT, String(N));
+    if(MAXL > N) MAXL = N;
     sessionId = genSession();
-    history.replaceState(null, "", "?s=" + sessionId + "&n=" + N);
+    history.replaceState(null, "", "?s=" + sessionId + "&n=" + N + "&m=" + MAXL);
     choices = null;
     localStorage.removeItem(draftKey());
     renderHome();
@@ -517,18 +575,38 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
     if(!isDemo) return;
     var names = [genId(), genId(), genId()];
     names.forEach(function(vid, idx){
-      var arr = [];
+      var arr = new Array(N).fill(0);
+      /* 喜欢数不超过上限；上限=全部时模拟约 6 成喜欢，否则按上限投 */
+      var budget = Math.min(MAXL, N);
+      if(MAXL >= N){ budget = Math.max(1, Math.round(N * 0.6)); }
+      if(budget > N) budget = N;
+      /* 加权无放回抽样：越靠前越容易被喜欢（模拟真实梯度） */
+      var w = [], W = 0;
       for(var i=0;i<N;i++){
-        /* 模拟真实梯度：样品越靠前越多人喜欢，带一点随机波动 */
         var base = 0.85 - (i / N) * 0.75;
         var wave = ((idx * 7 + i * 3) % 5) / 20;
-        arr.push(Math.random() < base + wave ? 1 : 0);
+        var bw = base + wave; if(bw < 0.03) bw = 0.03;
+        w.push(bw); W += bw;
+      }
+      var got = 0;
+      while(got < budget){
+        var r = Math.random() * W;
+        var acc = 0, hit = -1;
+        for(var i=0;i<N;i++){
+          if(w[i] <= 0) continue;
+          acc += w[i];
+          if(r <= acc){ hit = i; break; }
+        }
+        if(hit < 0){ for(var j=0;j<N;j++){ if(w[j] > 0){ hit = j; break; } } }
+        if(hit < 0) break;
+        arr[hit] = 1;
+        W -= w[hit]; w[hit] = 0; got++;
       }
       var rows = demoRows();
       rows.push({ voter_id: vid, choices: arr, created_at: new Date().toISOString() });
       saveDemoRows(rows);
     });
-    toast("已填充 3 位演示投票");
+    toast("已填充 3 位演示投票（每人喜欢 ≤ " + MAXL + "）");
     if(!$("view-board").classList.contains("hidden")) refreshBoard();
   }
 
@@ -542,6 +620,7 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
     renderChips();
     renderCur();
     updateBar();
+    updateLikeNote();
     $("submitBar").classList.remove("hidden");
   }
   function renderChips(){
@@ -564,6 +643,7 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
     var done = doneCount();
     var curVal = (choices && curIdx < N) ? choices[curIdx] : null;
     var chosen = (curVal === 1 || curVal === 0);
+    var likeFull = (MAXL < N) && curVal !== 1 && countLikes() >= MAXL;
     var stateTxt;
     if(chosen){
       stateTxt = (curVal === 1 ? '你之前选的是 👍 喜欢' : '你之前选的是 👎 不喜欢') + ' · 点下方按钮可改';
@@ -576,7 +656,7 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
       '<div class="sample-no">' + pad2(curIdx+1) + '</div>' +
       '<div class="sample-hint">' + stateTxt + '</div>' +
       '<div class="vote-btns">' +
-        '<button class="vote-btn like' + (chosen && curVal === 1 ? ' chosen' : '') + '" onclick="Vote.pick(1)"><span class="ico">👍</span>' + (chosen && curVal === 1 ? '喜欢 ✓' : '喜欢') + '</button>' +
+        '<button class="vote-btn like' + (chosen && curVal === 1 ? ' chosen' : '') + (likeFull ? ' disabled' : '') + '"' + (likeFull ? ' disabled' : '') + ' onclick="Vote.pick(1)"><span class="ico">👍</span>' + (chosen && curVal === 1 ? '喜欢 ✓' : (likeFull ? '喜欢（满）' : '喜欢')) + '</button>' +
         '<button class="vote-btn dislike' + (chosen && curVal === 0 ? ' chosen' : '') + '" onclick="Vote.pick(0)"><span class="ico">👎</span>' + (chosen && curVal === 0 ? '不喜欢 ✓' : '不喜欢') + '</button>' +
       '</div>' +
       '<div class="auto-next">选完自动跳到下一个</div>';
@@ -603,8 +683,29 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
     btn.classList.toggle("ok", d === N);
     btn.disabled = d === 0;
   }
+  function countLikes(){
+    var c = 0;
+    if(choices){ for(var i=0;i<N;i++){ if(choices[i] === 1) c++; } }
+    return c;
+  }
+  function updateLikeNote(){
+    var el = $("likeNote");
+    if(!el) return;
+    if(MAXL >= N){ el.classList.add("hidden"); return; }
+    var k = countLikes();
+    var full = k >= MAXL;
+    el.innerHTML = "👍 最多喜欢 <b>" + MAXL + "</b> 个 · 已喜欢 <b>" + k + "</b>" +
+      (full ? "，名额已满，想再选要先改掉别的喜欢" : " · 还剩 " + (MAXL - k) + " 个名额");
+    el.classList.toggle("full", full);
+    el.classList.remove("hidden");
+  }
   function pick(val){
     if(curIdx >= N) return;
+    /* 喜欢上限：满额时只许改掉已有喜欢，不许新增 */
+    if(val === 1 && MAXL < N && choices[curIdx] !== 1 && countLikes() >= MAXL){
+      toast("喜欢最多 " + MAXL + " 个，先点上方编号把别的改成「不喜欢」再选");
+      return;
+    }
     var votedNo = curIdx;
     choices[curIdx] = val;
     saveDraft();
@@ -614,6 +715,7 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
     renderChips();
     renderCur();
     updateBar();
+    updateLikeNote();
     showLastPick(pad2(votedNo+1), val);
     if(curIdx >= N) toast("全部投完，检查后提交");
   }
@@ -625,6 +727,10 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
   }
   function goVote(){ renderVote(); }
   function submitVote(){
+    if(MAXL < N && countLikes() > MAXL){
+      toast("喜欢的样品超过上限 " + MAXL + "，请把超出的改成「不喜欢」再提交");
+      return;
+    }
     var missing = N - doneCount();
     if(missing > 0){
       if(!confirm("还有 " + missing + " 个样品没投（不计分）。\n确定现在提交吗？")) return;
@@ -932,7 +1038,7 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
     if(!sessionId){
       /* 管理员入口：无 s 自动开一轮 */
       sessionId = genSession();
-      history.replaceState(null, "", "?s=" + sessionId + "&n=" + N);
+      history.replaceState(null, "", "?s=" + sessionId + "&n=" + N + "&m=" + MAXL);
       choices = null;
       renderHome();
       return;
@@ -950,6 +1056,7 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
   window.copyLink = copyLink;
   window.newRound = newRound;
   window.onCountChange = onCountChange;
+  window.onLikeChange = onLikeChange;
   window.goVote = goVote;
   window.showBoard = showBoard;
   window.submitVote = submitVote;
