@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>求索杯测投票</title>
-<meta name="version" content="v0.5.1-deletekey">
+<meta name="version" content="v0.6.0-cva">
 <style>
 :root{
   --bg:#F5F0EB; --card:#FFFFFF; --ink:#3C2A1E; --sub:#8B7355; --gold:#C9A96E;
@@ -145,13 +145,66 @@ body{background:var(--bg);font-family:-apple-system,"PingFang SC","Microsoft YaH
 .rank-grid button:active{transform:scale(0.95);}
 .rank-score{font-size:17px;font-weight:800;color:var(--ink);}
 .rank-score small{font-size:10px;color:var(--sub);font-weight:400;}
+
+/* ===== CVA 情感偏好评估 / 描述性评估 ===== */
+.cva-note{font-size:11px;color:#B8A794;text-align:center;padding:2px 0 8px;line-height:1.7;}
+.cva-card{background:var(--card);border-radius:18px;box-shadow:0 4px 16px rgba(60,42,30,0.08);padding:14px 14px 16px;margin-bottom:12px;}
+.cva-head{display:flex;align-items:center;gap:8px;padding-bottom:10px;border-bottom:1px solid var(--line);margin-bottom:10px;}
+.cva-head .no{font-size:17px;font-weight:800;letter-spacing:1px;}
+.cva-head .sp{flex:1;}
+.cva-score{font-size:15px;font-weight:800;color:var(--gold);}
+.cva-score small{font-size:10px;color:var(--sub);font-weight:400;}
+.cva-sec{margin-bottom:12px;}
+.cva-sec-top{display:flex;align-items:baseline;gap:6px;margin-bottom:5px;}
+.cva-sec-name{font-size:13px;font-weight:700;}
+.cva-sec-hint{font-size:10px;color:#B8A794;flex:1;line-height:1.4;}
+.cva-chg{font-size:9px;background:#FFF3E0;color:#E65100;border-radius:6px;padding:1px 5px;}
+.bub{display:flex;gap:3px;}
+.bub button{flex:1;min-width:0;border:1px solid var(--line);background:#fff;border-radius:8px;padding:7px 0;font-size:12px;font-weight:700;color:var(--sub);cursor:pointer;font-family:inherit;}
+.bub button.on{background:var(--ink);border-color:var(--ink);color:#fff;}
+.bub16{display:grid;grid-template-columns:repeat(8,1fr);gap:4px;}
+.bub16 button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:7px 0;font-size:12px;font-weight:700;color:var(--sub);cursor:pointer;font-family:inherit;}
+.bub16 button.on{background:var(--ink);border-color:var(--ink);color:#fff;}
+.bub16-cap{display:flex;justify-content:space-between;font-size:9px;color:#B8A794;margin-top:3px;}
+.cva-notein{width:100%;margin-top:6px;padding:7px 9px;border:1px solid var(--line);border-radius:8px;font-size:12px;font-family:inherit;color:var(--ink);background:#FBFAF8;}
+.cva-notein:focus{outline:none;border-color:var(--gold);}
+.cva-block{background:#FBFAF8;border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:10px;}
+.cva-block-t{font-size:12px;font-weight:700;margin-bottom:7px;}
+.cva-block-t small{font-weight:400;color:#B8A794;font-size:10px;margin-left:4px;}
+.catachip{display:flex;flex-wrap:wrap;gap:6px;}
+.catachip button{border:1px solid var(--line);background:#fff;border-radius:20px;padding:5px 11px;font-size:12px;color:var(--sub);cursor:pointer;font-family:inherit;}
+.catachip button.on{background:var(--gold);border-color:var(--gold);color:#fff;font-weight:700;}
+.catachip button:disabled{opacity:0.35;}
+.cupgrid{display:flex;flex-wrap:wrap;gap:6px;}
+.cupgrid button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:5px 10px;font-size:11px;color:var(--sub);cursor:pointer;font-family:inherit;}
+.cupgrid button.on{background:#B4432E;border-color:#B4432E;color:#fff;font-weight:700;}
+.cupgrid.ok button.on{background:var(--good);border-color:var(--good);}
+.cva-warn{font-size:10px;color:#B8A794;line-height:1.6;margin-top:6px;}
+.cva-steps{display:flex;gap:8px;margin-bottom:10px;}
+.cva-steps button{flex:1;border:1px solid var(--line);background:#fff;border-radius:10px;padding:9px;font-size:13px;font-weight:600;color:var(--ink);cursor:pointer;font-family:inherit;}
+.cva-steps button.on{background:var(--ink);color:#fff;border-color:var(--ink);}
+.cva-nav{display:flex;gap:8px;margin-top:4px;}
+.cva-nav button{flex:1;border:1px solid var(--line);background:#fff;border-radius:10px;padding:10px;font-size:13px;font-weight:600;color:var(--ink);cursor:pointer;font-family:inherit;}
+.cva-nav button.pri{background:var(--gold);border-color:var(--gold);color:#fff;}
+.cva-nav button:disabled{opacity:0.4;}
+.wf{background:#fff;border-radius:12px;padding:11px 13px;margin-bottom:8px;box-shadow:0 2px 8px rgba(60,42,30,0.06);}
+.wf-t{font-size:12px;font-weight:700;margin-bottom:6px;}
+.wf-t em{font-style:normal;color:var(--sub);font-weight:400;font-size:11px;margin-left:4px;}
+.wf-row{display:flex;flex-wrap:wrap;gap:5px;}
+.wf-tag{background:#F1EAE0;border-radius:14px;padding:3px 9px;font-size:11px;color:var(--ink);}
+.wf-tag b{color:var(--gold);font-size:10px;}
+.cva-tasterline{font-size:11px;color:var(--sub);margin-top:3px;line-height:1.6;}
+.cva-name-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 10px;}
+.cva-name-row span{font-size:12px;color:var(--sub);white-space:nowrap;}
+.cva-name-row input{flex:1;border:none;font-size:13px;font-family:inherit;color:var(--ink);background:transparent;min-width:0;}
+.cva-name-row input:focus{outline:none;}
 </style>
 </head>
 <body>
 <div class="wrap">
 
   <div class="top">
-    <div class="brand">求索杯测投票<small id="brandSub">喜欢 = 1分 · 不喜欢 = 0分</small></div>
+    <div class="brand">求索杯测<small id="brandSub">喜欢 = 1分 · 不喜欢 = 0分</small></div>
     <span class="mode-pill" id="modePill">连接中</span>
   </div>
 
@@ -211,6 +264,26 @@ body{background:var(--bg);font-family:-apple-system,"PingFang SC","Microsoft YaH
     <div class="like-note hidden" id="likeNote"></div>
     <div class="chips" id="chips"></div>
     <div class="vote-card" id="voteCard"></div>
+  </div>
+
+
+  <!-- CVA 评估视图（情感偏好 / 描述性） -->
+  <div id="view-cva" class="hidden">
+    <div class="cva-note" id="cvaNote"></div>
+    <div class="cva-name-row">
+      <span>杯测员</span>
+      <input id="cvaTasterName" type="text" placeholder="写个名字 / 编号（可选，榜单上认得出你）" oninput="CVAMode.setTasterName(this.value)">
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-top"><span id="progText2">已评 0/4</span><span id="voteSessionTag2"></span></div>
+      <div class="progress-bar"><div class="progress-fill" id="progFill2" style="width:0%"></div></div>
+    </div>
+    <div class="chips" id="cvaChips"></div>
+    <div class="cva-steps">
+      <button id="cvaViewTable" class="on" onclick="CVAMode.setView('table')">全部展开（熟练用）</button>
+      <button id="cvaViewStep" onclick="CVAMode.setView('step')">逐段引导</button>
+    </div>
+    <div id="cvaCardBox"></div>
   </div>
 
   <!-- 榜单视图 -->
@@ -303,7 +376,9 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
   var tParam = (params.get("t") || "").trim();
   var MODE = "vote";
   if(tParam === "rank") MODE = "rank";
-  else if(!params.has("t") && !sessionId && localStorage.getItem(LS_TYPE) === "rank") MODE = "rank";
+  else if(tParam === "cva") MODE = "cva";
+  else if(tParam === "desc") MODE = "desc";
+  else if(!params.has("t") && !sessionId && ["rank","cva","desc"].indexOf(localStorage.getItem(LS_TYPE)) >= 0) MODE = localStorage.getItem(LS_TYPE);
 
   /* 样品数量：URL ?n= 优先，其次上次选择，最后用配置默认（范围 1~30） */
   var LS_COUNT = "cv_count";
@@ -380,7 +455,7 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
     return c;
   }
   /* 链接构造：方式/上限参数统一入口 */
-  function typeQuery(){ return MODE === "rank" ? "&t=rank" : ""; }
+  function typeQuery(){ return (MODE === "vote") ? "" : ("&t=" + MODE); }
   function roundUrl(){ return "?s=" + sessionId + "&n=" + N + (MODE === "vote" ? ("&m=" + MAXL) : "") + typeQuery(); }
   function urlFor(){ return location.origin + location.pathname + roundUrl(); }
 
@@ -482,7 +557,7 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
 
   /* ---------- 视图切换 ---------- */
   function showView(name){
-    ["view-home","view-vote","view-board","view-history","view-done"].forEach(function(v){ $(v).classList.add("hidden"); });
+    ["view-home","view-vote","view-board","view-history","view-done","view-cva"].forEach(function(v){ if($(v)) $(v).classList.add("hidden"); });
     $(name).classList.remove("hidden");
     var voteTab = $("tabVote"), boardTab = $("tabBoard"), histTab = $("tabHist");
     if(voteTab){ voteTab.classList.toggle("active", name === "view-vote" || name === "view-done"); }
@@ -540,12 +615,18 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
     renderHome();
     toast("已用「每人最多喜欢 " + MAXL + " 个」开启新一轮");
   }
-  function typeLabel(v){ return v === "rank" ? "🏆 打分排名" : "👍 投票"; }
+  function typeLabel(v){
+    if(v === "rank") return "🏆 打分排名";
+    if(v === "cva") return "🎯 CVA 情感评估";
+    if(v === "desc") return "📋 CVA 描述性评估";
+    return "👍 投票";
+  }
   function fillTypeSel(){
     var sel = $("typeSel");
     if(!sel) return;
     sel.innerHTML = "";
-    [["vote","👍 投票（喜欢/不喜欢）"],["rank","🏆 打分排名（第1名满分）"]].forEach(function(pair){
+    [["vote","👍 投票（喜欢/不喜欢）"],["rank","🏆 打分排名（第1名满分）"],
+     ["cva","🎯 CVA 情感评估（9分制 · 出分）"],["desc","📋 CVA 描述性评估（15分强度 · 不出分）"]].forEach(function(pair){
       var o = document.createElement("option");
       o.value = pair[0];
       o.textContent = pair[1];
@@ -567,7 +648,11 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
   }
   function updateBrandSub(){
     var el = document.querySelector(".brand small");
-    if(el) el.textContent = (MODE === "rank") ? ("第1名 = " + N + "分 · 最后1分") : "喜欢 = 1分 · 不喜欢 = 0分";
+    if(!el) return;
+    if(MODE === "rank") el.textContent = "第1名 = " + N + "分 · 最后1分";
+    else if(MODE === "cva") el.textContent = "SCA CVA 情感偏好评估 · 9 分制";
+    else if(MODE === "desc") el.textContent = "SCA CVA 描述性评估 · 15 分强度";
+    else el.textContent = "喜欢 = 1分 · 不喜欢 = 0分";
   }
   function renderHome(){
     showView("view-home");
@@ -576,11 +661,20 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
     fillTypeSel();
     var isRank = MODE === "rank";
     var likeRow = $("likeRowWrap");
-    if(likeRow) likeRow.classList.toggle("hidden", isRank);
-    $("adminTitle").textContent = isRank ? "🏆 本轮打分二维码" : "☕ 本轮投票二维码";
-    $("adminSub").innerHTML = isRank
-      ? "把下面的码给客人扫<br>客人给 <b>" + N + " 个样品排名：第1名 " + N + " 分，最后1分</b><br>从最好喝的开始依次选，提交前可改"
-      : "把下面的码给客人扫<br>每人给每个样品投 <b>喜欢 / 不喜欢</b><br>喜欢数量有上限（下方设置），提交前可改";
+    if(likeRow) likeRow.classList.toggle("hidden", isRank || MODE === "cva" || MODE === "desc");
+    if(MODE === "cva"){
+      $("adminTitle").textContent = "🎯 本轮 CVA 情感评估";
+      $("adminSub").innerHTML = "把下面的码给杯测员扫<br>每人按 SCA CVA 情感表给每支样品评 <b>8 段 9 分制</b>，自动出分<br>分数跟人绑定，不做多人平均 · 榜单按中位数排";
+    } else if(MODE === "desc"){
+      $("adminTitle").textContent = "📋 本轮描述性评估";
+      $("adminSub").innerHTML = "把下面的码给杯测员扫<br>每人记录 <b>7 段 0~15 强度 + 官方词库打勾</b>，不打分<br>榜单看强度分布与词频";
+    } else if(isRank){
+      $("adminTitle").textContent = "🏆 本轮打分二维码";
+      $("adminSub").innerHTML = "把下面的码给客人扫<br>客人给 <b>" + N + " 个样品排名：第1名 " + N + " 分，最后1分</b><br>从最好喝的开始依次选，提交前可改";
+    } else {
+      $("adminTitle").textContent = "☕ 本轮投票二维码";
+      $("adminSub").innerHTML = "把下面的码给客人扫<br>每人给每个样品投 <b>喜欢 / 不喜欢</b><br>喜欢数量有上限（下方设置），提交前可改";
+    }
     updateBrandSub();
     var link = urlFor();
     $("voteLink").value = link;
@@ -641,6 +735,7 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
     toast("已用 " + N + " 个样品开启新一轮");
   }
   function seedDemo(){
+    if((MODE === "cva" || MODE === "desc") && window.CVAMode){ window.CVAMode.seedDemo(); return; }
     if(!isDemo) return;
     var names = [genId(), genId(), genId()];
     names.forEach(function(vid, idx){
@@ -709,6 +804,7 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
   /* ---------- 投票 ---------- */
   var curIdx = 0;
   function renderVote(){
+    if((MODE === "cva" || MODE === "desc") && window.CVAMode){ window.CVAMode.render(); return; }
     showView("view-vote");
     updateBrandSub();
     if(!choices){ choices = new Array(N).fill(null); saveDraft(); }
@@ -932,6 +1028,7 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
   }
   function goVote(){ renderVote(); }
   function submitVote(){
+    if((MODE === "cva" || MODE === "desc") && window.CVAMode){ window.CVAMode.submit(); return; }
     if(MODE === "rank"){
       var missR = N - doneCount();
       if(missR > 0){ toast("还有 " + missR + " 个样品没排名，排完才能提交"); return; }
@@ -1012,6 +1109,7 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
   }
   function manualBoardRefresh(){ refreshBoard(); }
   function refreshBoard(){
+    if((MODE === "cva" || MODE === "desc") && window.CVAMode){ window.CVAMode.renderBoard(); return; }
     fetchAllVotes().then(function(rows){
       lastBoard = { rows: rows || [], sid: sessionId, mode: MODE };
       var emptyHtml = (MODE === "rank")
@@ -1160,6 +1258,7 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
     loadHistory();
   }
   function loadHistory(){
+    if((MODE === "cva" || MODE === "desc") && window.CVAMode){ window.CVAMode.loadHistory(); return; }
     var listEl = $("histList");
     listEl.innerHTML = '<div class="hist-empty">加载中…</div>';
     fetchAllSessions().then(function(rows){
@@ -1202,6 +1301,7 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
     });
   }
   function openHistoryDetail(sid){
+    if((MODE === "cva" || MODE === "desc") && window.CVAMode){ window.CVAMode.openHistoryDetail(sid, MODE); return; }
     viewingHistSid = sid;
     var meta = null;
     for(var i=0;i<histSessions.length;i++){ if(histSessions[i].sid === sid){ meta = histSessions[i]; break; } }
@@ -1231,6 +1331,7 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
     });
   }
   function deleteRound(){
+    if((MODE === "cva" || MODE === "desc") && window.CVAMode){ window.CVAMode.deleteRound(); return; }
     var sid = viewingHistSid;
     var info = "这轮投票";
     var delRow = $("histDelRow");
@@ -1324,6 +1425,763 @@ var SUPABASE_ANON_KEY = "sb_publishable_XH2MLtf_rPZ9NvqeCSMAkQ_bF7IyGb1";
   } else {
     boot();
   }
+})();
+</script>
+
+<script>
+/* ================= CVA 模式（情感偏好评估 / 描述性评估）================= */
+(function(){
+"use strict";
+var P = new URLSearchParams(location.search);
+var SID = (P.get("s")||"").trim();
+var MODE = ((P.get("t")||"") === "desc") ? "desc" : "cva";
+var IS_DESC = (MODE === "desc");
+var LS_VOTER = "cv_voter", LS_COUNT = "cv_count", LS_NAME = "cv_cva_name";
+var DKEY = "cv_cva_draft_", SKEY = "cv_cva_sub_", DEMO = "cv_cva_demo_";
+var voterId = localStorage.getItem(LS_VOTER) || "";
+var tasterName = localStorage.getItem(LS_NAME) || "";
+var isDemo = !(window.SUPABASE_URL && window.SUPABASE_ANON_KEY);
+var N;
+(function(){
+  var u = parseInt(P.get("n"),10);
+  if(u >= 1 && u <= 30){ N = u; return; }
+  var s = parseInt(localStorage.getItem(LS_COUNT)||"0",10);
+  N = (s >= 1 && s <= 30) ? Math.min(s,12) : 4;
+})();
+
+/* 8 段（情感表）/ 前 7 段（描述性表没有「整体」） */
+var SECS = [
+  {k:"fragrance",  n:"干香", h:"磨好的干粉香（未注水）"},
+  {k:"aroma",      n:"湿香", h:"注水后 · 破渣时的香"},
+  {k:"flavor",     n:"风味", h:"在嘴里：味道 + 回鼻香气"},
+  {k:"aftertaste", n:"余韵", h:"咽下/吐出后留在口喉的余味"},
+  {k:"acidity",    n:"酸质", h:"酸味强度（不问好坏）"},
+  {k:"sweetness",  n:"甜感", h:"甜味强度"},
+  {k:"mouthfeel",  n:"口感", h:"口中厚度与质地（不含温度）"},
+  {k:"overall",    n:"整体", h:"整杯综合印象（最后评）"}
+];
+var USED = IS_DESC ? SECS.slice(0,7) : SECS;
+var ANCH = ["①极低","②很低","③偏低","④略低","⑤不高不低","⑥略高","⑦偏高","⑧很高","⑨极高"];
+var ANCH_D = {0:"无",5:"低",10:"中",15:"高"};
+
+var CATA = {
+  ortho:["花香","果味","浆果","干果","柑橘","酸","发酵","青草/植物","化学","霉土","木质","烘焙","谷物","焦","烟草","坚果","可可","香料","甜","香草","红糖","其他"],
+  retro:["花香","果味","浆果","干果","柑橘","酸","发酵","青草/植物","化学","霉土","木质","烘焙","谷物","焦","烟草","坚果","可可","香料","甜","香草","红糖","其他"],
+  taste:["咸","酸","甜","苦","鲜"],
+  mf:["金属","粗糙","油润","顺滑","涩口"]
+};
+var CATA_LIMIT = { ortho:5, retro:5, taste:2, mf:2 };
+var DEFECTS = ["霉味","酚味","土豆"];
+
+/* 分组：与 SCA 官方表单的框一一对应 */
+var STEPS = [
+  {t:"干香 · 湿香", secs:["fragrance","aroma"], cata:["ortho"],  hint:"干香湿香共用一个打勾框，最多勾 5 个"},
+  {t:"风味 · 余韵", secs:["flavor","aftertaste"], cata:["retro","taste"], hint:"回鼻最多 5 个 · 主味最多 2 个"},
+  {t:"酸质", secs:["acidity"], free:true, hint:"没有打勾表，自己写描述词"},
+  {t:"甜感", secs:["sweetness"], free:true, hint:"没有打勾表，自己写描述词"},
+  {t:"口感", secs:["mouthfeel"], cata:["mf"], hint:"最多勾 2 个"},
+  {t:"整体", secs:["overall"], hint:"整杯综合印象，最后评"}
+];
+/* 描述性评估没有「整体」，多一段烘焙度；情感表多一段杯数/缺陷 */
+if(IS_DESC){
+  STEPS.pop();
+  STEPS.push({t:"烘焙度", roast:true, hint:"目视记录，如 中烘 / Agtron 63"});
+} else {
+  STEPS.push({t:"杯数 · 缺陷", cups:true});
+}
+
+/* ---------- 数据 ---------- */
+function blank(){
+  var o = { s:{}, cata:{ortho:[],retro:[],taste:[],mf:[]}, nt:{}, nu:0, df:0, dt:"", chg:{}, roast:"" };
+  return o;
+}
+function loadData(){
+  try{
+    var raw = localStorage.getItem(DKEY + SID);
+    if(raw){
+      var a = JSON.parse(raw);
+      if(Array.isArray(a) && a.length === N){
+        return a.map(function(o){ return o || blank(); });
+      }
+    }
+  }catch(e){}
+  var arr = []; for(var i=0;i<N;i++) arr.push(blank());
+  return arr;
+}
+var data = loadData();
+function saveData(){ try{ localStorage.setItem(DKEY + SID, JSON.stringify(data)); }catch(e){} }
+
+/* 管理员台改样品数/换轮次时会 replaceState 改 URL，所以每次渲染前重新读环境 */
+function readEnv(){
+  var q = new URLSearchParams(location.search);
+  var s = (q.get("s")||"").trim();
+  var u = parseInt(q.get("n"),10), v;
+  if(u >= 1 && u <= 30){ v = u; }
+  else {
+    var ls = parseInt(localStorage.getItem(LS_COUNT)||"0",10);
+    v = (ls >= 1 && ls <= 30) ? Math.min(ls,12) : 4;
+  }
+  var changed = false;
+  if(s && s !== SID){ SID = s; changed = true; }
+  if(v !== N){ N = v; changed = true; }
+  if(changed){ data = loadData(); }
+}
+
+/* ---------- 计分（SCA 104 §5.5） ---------- */
+function round25(x){ return Math.round(x*4)/4; }
+/* 杯位是位掩码，算分要按「杯数」数 */
+function pc(x){ var c = 0; x = x|0; while(x){ c += x & 1; x >>= 1; } return c; }
+function scoreOf(o){
+  if(IS_DESC) return null;
+  var sum = 0;
+  for(var i=0;i<8;i++){
+    var v = o.s[SECS[i].k];
+    if(!(v >= 1 && v <= 9)) return null;
+    sum += v;
+  }
+  var s = sum*0.65625 + 52.75 - 2*pc(o.nu) - 4*pc(o.df);
+  return round25(s);
+}
+function filledCount(o){ var c=0; for(var i=0;i<USED.length;i++){ if(o.s[USED[i].k] != null) c++; } return c; }
+function isDone(o){ return filledCount(o) === USED.length; }
+function doneCount(){ var c=0; for(var i=0;i<N;i++){ if(isDone(data[i])) c++; } return c; }
+function hasAny(o){ return filledCount(o) > 0 || (o.nu||0) > 0 || (o.df||0) > 0; }
+
+var cur = 0, view = "table", step = 0;
+(function(){
+  for(var i=0;i<N;i++){ if(!hasAny(data[i])){ cur = i; break; } }
+})();
+
+/* ---------- 工具 ---------- */
+function $(id){ return document.getElementById(id); }
+function pad2(n){ return n<10 ? "0"+n : ""+n; }
+function toast(msg){
+  var t = $("toast"); if(!t) return;
+  t.textContent = msg; t.classList.add("show");
+  clearTimeout(t._timer); t._timer = setTimeout(function(){ t.classList.remove("show"); }, 2400);
+}
+function fetchWithTimeout(url, opt, ms){
+  var ctrl = new AbortController();
+  var timer = setTimeout(function(){ ctrl.abort(); }, ms || 10000);
+  opt.signal = ctrl.signal;
+  return fetch(url, opt).finally(function(){ clearTimeout(timer); });
+}
+function retryFetch(fn, tries){
+  var delay = 800;
+  function attempt(left){
+    return fn().catch(function(err){
+      var st = err && err.status;
+      if(st === 409 || st === 401 || st === 403 || st === 404) throw err;
+      if(left <= 1) throw err;
+      return new Promise(function(res){ setTimeout(res, delay); }).then(function(){ return attempt(left-1); });
+    });
+  }
+  return attempt(tries);
+}
+function apiGet(url){
+  return retryFetch(function(){
+    return fetchWithTimeout(url, { headers:{ "apikey": window.SUPABASE_ANON_KEY, "Authorization":"Bearer " + window.SUPABASE_ANON_KEY } }).then(function(r){
+      if(!r.ok){ var e = new Error("GET " + r.status); e.status = r.status; throw e; }
+      return r.json();
+    });
+  }, 2);
+}
+function apiPost(url, body){
+  return retryFetch(function(){
+    return fetchWithTimeout(url, { method:"POST", headers:{
+      "apikey": window.SUPABASE_ANON_KEY, "Authorization":"Bearer " + window.SUPABASE_ANON_KEY,
+      "Content-Type":"application/json", "Prefer":"return=minimal"
+    }, body: JSON.stringify(body) }).then(function(r){
+      if(!r.ok){ var e = new Error("POST " + r.status); e.status = r.status; throw e; }
+      return r;
+    });
+  }, 3);
+}
+var TBL = "/rest/v1/cva_entries";
+function demoRowsOf(sid){
+  try{
+    var a = JSON.parse(localStorage.getItem(DEMO + sid) || "[]");
+    if(!Array.isArray(a)) return [];
+    return a.map(function(r){ var c = {}; for(var k in r) c[k] = r[k]; c.session_id = sid; return c; });
+  }catch(e){ return []; }
+}
+function demoRows(){ return demoRowsOf(SID); }
+function saveDemoRows(rows){ localStorage.setItem(DEMO + SID, JSON.stringify(rows)); }
+function demoAllRows(){
+  var out = [];
+  for(var i=0;i<localStorage.length;i++){
+    var k = localStorage.key(i);
+    if(k && k.indexOf(DEMO) === 0){ out = out.concat(demoRowsOf(k.slice(DEMO.length))); }
+  }
+  return out;
+}
+
+/* ---------- 渲染 ---------- */
+/* 本模块自己的视图切换（主逻辑的 showView 在另一个闭包里，不共用） */
+function showView(name){
+  ["view-home","view-vote","view-board","view-history","view-done","view-cva"].forEach(function(v){
+    var e = document.getElementById(v); if(e) e.classList.add("hidden");
+  });
+  var e = document.getElementById(name); if(e) e.classList.remove("hidden");
+  var vt = $("tabVote"), bt = $("tabBoard"), ht = $("tabHist");
+  if(vt) vt.classList.toggle("active", name === "view-vote" || name === "view-done" || name === "view-cva");
+  if(bt) bt.classList.toggle("active", name === "view-board");
+  if(ht) ht.classList.toggle("active", name === "view-history");
+}
+function bubHtml(secIdx, val){
+  var h = "";
+  if(IS_DESC){
+    for(var i=0;i<=15;i++){
+      h += '<button type="button" class="' + (val===i?"on":"") + '" onclick="CVAMode.setScore(' + secIdx + ',' + i + ')">' + i + '</button>';
+    }
+    return '<div class="bub16">' + h + '</div><div class="bub16-cap"><span>0 无</span><span>5 低</span><span>10 中</span><span>15 高</span></div>';
+  }
+  for(var j=1;j<=9;j++){
+    h += '<button type="button" class="' + (val===j?"on":"") + '" onclick="CVAMode.setScore(' + secIdx + ',' + j + ')" title="' + ANCH[j-1] + '">' + j + '</button>';
+  }
+  return '<div class="bub">' + h + '</div>';
+}
+function secHtml(secIdx, o){
+  var s = SECS[secIdx], v = o.s[s.k];
+  return '<div class="cva-sec">' +
+    '<div class="cva-sec-top"><span class="cva-sec-name">' + s.n + '</span>' +
+      (o.chg && o.chg[s.k] ? '<span class="cva-chg">已改（以最后一次为准）</span>' : '') +
+      '<span class="cva-sec-hint">' + s.h + '</span>' +
+      (v != null ? '<span style="font-size:11px;font-weight:700;color:var(--gold)">' + v + (IS_DESC?'':' 分') + '</span>' : '') +
+    '</div>' +
+    bubHtml(secIdx, v) +
+    '<input class="cva-notein" type="text" placeholder="' + (IS_DESC && (s.k==="acidity"||s.k==="sweetness") ? '描述词，如：柠檬酸 / 熟果甜' : (IS_DESC ? '备注（可选）' : '说明为什么给这个分（可选）')) + '" value="' + escAttr(o.nt[s.k]||'') + '" oninput="CVAMode.setNote(\'' + s.k + '\',this.value)">' +
+  '</div>';
+}
+function escAttr(s){ return String(s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;"); }
+function cataboxHtml(o, kinds){
+  var h = "";
+  kinds.forEach(function(k){
+    var list = CATA[k], sel = o.cata[k] || [];
+    var title = k==="ortho" ? "干香湿香打勾（回鼻类）" : k==="retro" ? "风味余韵打勾（回鼻类）" : k==="taste" ? "主味" : "口感（质地）";
+    var chips = "";
+    list.forEach(function(term, i){
+      var on = sel.indexOf(i) >= 0;
+      var full = !on && sel.length >= CATA_LIMIT[k];
+      chips += '<button type="button" class="' + (on?"on":"") + '"' + (full?' disabled':'') + ' onclick="CVAMode.toggleCata(\'' + k + '\',' + i + ')">' + term + '</button>';
+    });
+    h += '<div class="cva-block"><div class="cva-block-t">' + title +
+         '<small>最多 ' + CATA_LIMIT[k] + ' 个 · 已选 ' + sel.length + '</small></div>' +
+         '<div class="catachip">' + chips + '</div></div>';
+  });
+  return h;
+}
+function cupsHtml(o){
+  var nu = "", df = "";
+  for(var i=0;i<5;i++){
+    var bn = (o.nu>>i)&1, bd = (o.df>>i)&1;
+    nu += '<button type="button" class="' + (bn?"on":"") + '" onclick="CVAMode.toggleCup(\'nu\',' + i + ')">' + (i+1) + '</button>';
+    df += '<button type="button" class="' + (bd?"on":"") + '" onclick="CVAMode.toggleCup(\'df\',' + i + ')">' + (i+1) + '</button>';
+  }
+  var dt = "";
+  DEFECTS.forEach(function(d){
+    dt += '<button type="button" class="' + (o.dt===d?"on":"") + '" onclick="CVAMode.setDefect(\'' + d + '\')">' + d + '</button>';
+  });
+  return '<div class="cva-block"><div class="cva-block-t">非均匀杯<small>质的不同才算（浓淡差异不算）· 点击杯号</small></div><div class="cupgrid ok">' + nu + '</div></div>' +
+    '<div class="cva-block"><div class="cva-block-t">缺陷杯<small>只认霉味 / 酚味 / 土豆</small></div><div class="cupgrid">' + df + '</div>' +
+    '<div class="cva-block-t" style="margin-top:8px">缺陷类型<small>杯数和类型必须同时填，缺一个不算缺陷</small></div><div class="cupgrid">' + dt + '</div></div>';
+}
+function cardHtml(i){
+  var o = data[i];
+  var h = '<div class="cva-card"><div class="cva-head"><span class="no">样品 ' + pad2(i+1) + '</span><span class="sp"></span>';
+  if(!IS_DESC){
+    var sc = scoreOf(o);
+    h += '<span class="cva-score">' + (sc!=null ? sc.toFixed(2) + ' <small>分</small>' : '<small>未出分 ' + filledCount(o) + '/' + USED.length + '</small>') + '</span>';
+  } else {
+    h += '<span class="cva-score">' + (isDone(o) ? '已填完' : '<small>未填完 ' + filledCount(o) + '/' + USED.length + '</small>') + '</span>';
+  }
+  h += '</div>';
+  var groups = (view === "step") ? [STEPS[step]] : STEPS;
+  groups.forEach(function(g){
+    if(g.cups){ h += cupsHtml(o); return; }
+    if(g.roast){
+      h += '<div class="cva-block"><div class="cva-block-t">烘焙度（目视）</div>' +
+        '<input class="cva-notein" style="margin-top:0" type="text" placeholder="如：中烘 / Agtron 63 / 中偏浅" value="' + escAttr(o.roast||'') + '" oninput="CVAMode.setRoast(this.value)"></div>';
+      return;
+    }
+    g.secs.forEach(function(k){
+      var idx = -1; for(var q=0;q<SECS.length;q++){ if(SECS[q].k === k){ idx = q; break; } }
+      h += secHtml(idx, o);
+    });
+    if(g.cata) h += cataboxHtml(o, g.cata);
+  });
+  if(view === "step"){
+    h += '<div class="cva-nav">' +
+      '<button type="button" onclick="CVAMode.stepTo(' + (step-1) + ')"' + (step<=0?' disabled':'') + '>← 上一段</button>' +
+      (step < STEPS.length-1
+        ? '<button type="button" class="pri" onclick="CVAMode.stepTo(' + (step+1) + ')">下一段 →</button>'
+        : '<button type="button" class="pri" onclick="CVAMode.setView(\'table\')">看全部 / 换样品</button>') +
+      '</div>' +
+      '<div class="cva-warn">第 ' + (step+1) + ' / ' + STEPS.length + ' 段 · ' + STEPS[step].t + '（' + (STEPS[step].hint||'') + '）</div>';
+  }
+  h += '</div>';
+  return h;
+}
+function render(){
+  readEnv();
+  if(localStorage.getItem(SKEY + SID)){
+    var t0 = $("doneTitle"), s0 = $("doneSub");
+    if(t0) t0.textContent = IS_DESC ? "描述性评估已提交" : "CVA 评估已提交";
+    if(s0) s0.textContent = "这轮你已经提交过了";
+    var b0 = $("submitBar"); if(b0) b0.classList.add("hidden");
+    showView("view-done");
+    return;
+  }
+  showView("view-cva");
+  var bs = document.querySelector(".brand small");
+  if(bs) bs.textContent = IS_DESC ? "SCA CVA 描述性评估 · 15 分强度" : "SCA CVA 情感偏好评估 · 9 分制";
+  var ni = $("cvaTasterName"); if(ni && ni.value !== tasterName) ni.value = tasterName;
+  var note = $("cvaNote");
+  if(note){
+    note.innerHTML = IS_DESC
+      ? "SCA CVA 描述性评估 · 只记录「是什么味、多强」，不打分<br>每段 0~15 强度 · 打勾表按官方词库"
+      : "SCA CVA 情感偏好评估 · 记录「你喜不喜欢」<br>8 段各 9 分制（5 = 不高不低）· 分数按官方公式自动算";
+  }
+  renderChips(); renderCard(); updateBar(); updateViewBtns();
+  var bar = $("submitBar"); if(bar) bar.classList.remove("hidden");
+}
+function updateViewBtns(){
+  var a = $("cvaViewTable"), b = $("cvaViewStep");
+  if(a) a.classList.toggle("on", view === "table");
+  if(b) b.classList.toggle("on", view === "step");
+}
+function renderChips(){
+  var box = $("cvaChips"); if(!box) return;
+  var h = "";
+  for(var i=0;i<N;i++){
+    var cls = "chip";
+    if(isDone(data[i])) cls += " done";
+    else if(hasAny(data[i])) cls += " done";
+    if(i === cur) cls += " cur";
+    h += '<div class="' + cls + '" onclick="CVAMode.jump(' + i + ')">' + pad2(i+1) + '</div>';
+  }
+  box.innerHTML = h;
+}
+function renderCard(){
+  var box = $("cvaCardBox"); if(!box) return;
+  box.innerHTML = cardHtml(cur);
+}
+function updateBar(){
+  var d = doneCount();
+  var t = $("progText2"); if(t) t.textContent = (IS_DESC ? "已评 " : "已评 ") + d + "/" + N;
+  var f = $("progFill2"); if(f) f.style.width = (N ? (d/N*100) : 0) + "%";
+  var tag = $("voteSessionTag2"); if(tag) tag.textContent = IS_DESC ? "📋 描述性评估" : "🎯 CVA 情感评估";
+  var dp = $("donePrefix"); if(dp) dp.textContent = "已评";
+  var dc = $("doneCount"); if(dc) dc.textContent = d;
+  var tc = $("totalCount"); if(tc) tc.textContent = N;
+  var btn = $("submitBtn");
+  if(btn){
+    btn.classList.toggle("ok", d === N);
+    btn.disabled = d === 0;
+    btn.textContent = (d === N) ? (IS_DESC ? "提交描述性评估" : "提交 CVA 评估") : ("还差 " + (N-d) + " 支没评完");
+  }
+}
+
+/* ---------- 交互 ---------- */
+function setScore(secIdx, val){
+  var k = SECS[secIdx].k, o = data[cur];
+  if(o.s[k] != null && o.s[k] !== val) o.chg[k] = 1;
+  o.s[k] = val;
+  saveData(); renderChips(); renderCard(); updateBar();
+}
+function setNote(k, v){ data[cur].nt[k] = v; saveData(); }
+function setTasterName(v){ tasterName = v; localStorage.setItem(LS_NAME, v); }
+function setRoast(v){ data[cur].roast = v; saveData(); }
+function toggleCata(kind, idx){
+  var o = data[cur], sel = o.cata[kind] || (o.cata[kind] = []);
+  var at = sel.indexOf(idx);
+  if(at >= 0) sel.splice(at, 1);
+  else {
+    if(sel.length >= CATA_LIMIT[kind]){ toast("「" + (kind==="taste"?"主味":"这类") + "」最多选 " + CATA_LIMIT[kind] + " 个，先取消一个"); return; }
+    sel.push(idx);
+  }
+  saveData(); renderCard();
+}
+function toggleCup(kind, i){
+  var o = data[cur];
+  o[kind] = (o[kind]||0) ^ (1<<i);
+  saveData(); renderChips(); renderCard(); updateBar();
+}
+function setDefect(d){
+  var o = data[cur];
+  o.dt = (o.dt === d) ? "" : d;
+  saveData(); renderCard();
+}
+function jump(i){
+  if(i<0 || i>=N) return;
+  cur = i; step = 0;
+  renderChips(); renderCard(); updateViewBtns();
+}
+function setView(v){
+  view = (v === "step") ? "step" : "table";
+  if(view === "step"){
+    step = 0;
+    /* 逐段引导：从第一段没填的段开始 */
+    for(var i=0;i<STEPS.length;i++){
+      var g = STEPS[i];
+      if(!g.secs) continue;
+      var miss = false;
+      g.secs.forEach(function(k){ if(data[cur].s[k] == null) miss = true; });
+      if(miss){ step = i; break; }
+    }
+  }
+  updateViewBtns(); renderCard();
+}
+function stepTo(s){
+  if(s < 0 || s >= STEPS.length) return;
+  step = s; renderCard(); updateViewBtns();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+/* ---------- 提交 ---------- */
+function validate(){
+  var assessed = 0;
+  for(var i=0;i<N;i++){
+    var o = data[i], f = filledCount(o);
+    if(f === 0){
+      if(hasAny(o)){ return "样品 " + pad2(i+1) + " 有问题：杯数勾了但分数没填完"; }
+      continue;
+    }
+    if(f < USED.length){ return "样品 " + pad2(i+1) + " 还差 " + (USED.length-f) + " 段没评（CVA 要求 " + USED.length + " 段全填才出分）"; }
+    if(!IS_DESC){
+      if(o.df > 0 && !o.dt) return "样品 " + pad2(i+1) + "：勾了缺陷杯，但没选缺陷类型（标准要求两者同时填）";
+      if(o.dt && !o.df) return "样品 " + pad2(i+1) + "：选了缺陷类型，但没勾是哪几杯";
+    }
+    assessed++;
+  }
+  if(assessed === 0) return "还没有一支样品评完";
+  return "";
+}
+function buildSamples(){
+  var out = [];
+  for(var i=0;i<N;i++){
+    var o = data[i];
+    if(!hasAny(o)) continue;
+    var rec = { no:i+1, s:o.s, cata:o.cata, nt:o.nt, nu:o.nu||0, df:o.df||0, nuN:pc(o.nu), dfN:pc(o.df), dt:o.dt||"" };
+    if(IS_DESC){ rec.intensity = o.s; rec.roast = o.roast || ""; rec.cata = o.cata; }
+    else { rec.score = scoreOf(o); }
+    out.push(rec);
+  }
+  return out;
+}
+function submit(){
+  readEnv();
+  var err = validate();
+  if(err){ toast(err); return; }
+  var samples = buildSamples();
+  var unassessed = N - samples.length;
+  var scores = samples.map(function(s){ return s.score; }).filter(function(v){ return typeof v === "number"; });
+  var med = scores.length ? median(scores) : null;
+  var msg = "提交后不能再改。\n本次评了 " + samples.length + " / " + N + " 支";
+  if(unassessed > 0) msg += "（还有 " + unassessed + " 支没评，不计分）";
+  if(med != null) msg += "，你的中位分 " + med.toFixed(2);
+  msg += "。\n确定提交吗？";
+  if(!confirm(msg)) return;
+  var btn = $("submitBtn");
+  if(btn){ btn.disabled = true; btn.textContent = "提交中…"; }
+  var row = { session_id: SID, taster_id: voterId, taster_name: (tasterName || null), mode: MODE, sample_count: N, samples: samples };
+  function done(){
+    localStorage.setItem(SKEY + SID, "1");
+    localStorage.removeItem(DKEY + SID);
+    var t = $("doneTitle"), s = $("doneSub");
+    if(t) t.textContent = IS_DESC ? "描述性评估已提交" : "CVA 评估已提交";
+    if(s) s.innerHTML = "感谢参与！<br>你的 " + samples.length + " 支样品记录已入库" + (med!=null ? "，中位分 <b>" + med.toFixed(2) + "</b>" : "");
+    var bar = $("submitBar"); if(bar) bar.classList.add("hidden");
+    showView("view-done");
+  }
+  if(isDemo){
+    var rows = demoRows();
+    rows.push({ taster_id: voterId, taster_name: (tasterName || null), mode: MODE, sample_count: N, samples: samples, created_at: new Date().toISOString() });
+    saveDemoRows(rows);
+    done();
+    return;
+  }
+  apiPost(window.SUPABASE_URL + TBL, [row]).then(done).catch(function(e){
+    if(btn){ btn.disabled = false; btn.textContent = "提交 CVA 评估"; }
+    var msg = String(e && e.message || e);
+    if((e && e.status === 409) || msg.indexOf("23505") >= 0){ toast("你在这轮已经提交过了"); done(); }
+    else if(e && e.status === 404){ toast("数据库还没建表：先在 Supabase SQL Editor 跑 cva_entries 建表 SQL"); }
+    else { toast("提交失败，检查网络后重试"); }
+    console.error(e);
+  });
+}
+
+/* ---------- 统计 ---------- */
+function median(a){
+  var b = a.slice().sort(function(x,y){ return x-y; });
+  var m = Math.floor(b.length/2);
+  return b.length % 2 ? b[m] : (b[m-1] + b[m]) / 2;
+}
+function shortId(v){ v = String(v||""); return v.length > 4 ? ("··" + v.slice(-4)) : v; }
+
+function fetchRows(sid){
+  if(isDemo) return Promise.resolve(demoRowsOf(sid));
+  var url = window.SUPABASE_URL + TBL + "?select=taster_id,taster_name,mode,sample_count,samples,created_at&session_id=eq." + encodeURIComponent(sid) + "&limit=2000";
+  if(sid === SID) url += "&mode=eq." + MODE;
+  return apiGet(url);
+}
+function fetchAllRows(){
+  if(isDemo) return Promise.resolve(demoAllRows());
+  return apiGet(window.SUPABASE_URL + TBL + "?select=session_id,mode,sample_count,taster_id,taster_name,samples,created_at&limit=5000");
+}
+
+function renderCvaBoard(listEl, headEl, rows, sid, headPrefix, emptyHtml){
+  if(!rows.length){ headEl.innerHTML = headPrefix; listEl.innerHTML = emptyHtml || '<div class="empty">暂无数据</div>'; return; }
+  var n = Math.max.apply(null, rows.map(function(r){ return r.sample_count || 0; }).concat([N]));
+  var per = [];
+  for(var i=0;i<n;i++) per.push([]);
+  rows.forEach(function(r){
+    var ss = r.samples || [];
+    for(var j=0;j<ss.length;j++){
+      var s = ss[j];
+      if(s && typeof s.score === "number" && s.no >= 1 && s.no <= n) per[s.no-1].push({ id:r.taster_id, nm:r.taster_name || "", v:s.score });
+    }
+  });
+  var items = [];
+  for(var k=0;k<n;k++){
+    if(!per[k].length) continue;
+    var vals = per[k].map(function(x){ return x.v; });
+    items.push({ no:k+1, vals:vals, med:median(vals), mn:Math.min.apply(null,vals), mx:Math.max.apply(null,vals), who:per[k] });
+  }
+  headEl.innerHTML = headPrefix + ' · ' + rows.length + ' 人评估 · ' + n + ' 支样品<br>' +
+    '排序按 <b>中位数</b>（CVA 分数与人绑定，不做多人平均，排序仅为方便看）';
+  items.sort(function(a,b){ return b.med - a.med || a.no - b.no; });
+  var html = "";
+  for(var q=0;q<items.length;q++){
+    var it = items[q];
+    var cls = q===0 ? "top1" : q===1 ? "top2" : q===2 ? "top3" : "normal";
+    var who = it.who.slice().sort(function(x,y){ return y.v - x.v; }).map(function(x){ return (x.nm || shortId(x.id)) + ' ' + x.v.toFixed(2); }).join(' · ');
+    var pct = Math.max(3, Math.min(100, (it.med - 75) / 25 * 100));
+    html += '<div class="rank-item">' +
+      '<div class="rank-pos ' + cls + '">' + (q===0?"🥇":q===1?"🥈":q===2?"🥉":(q+1)) + '</div>' +
+      '<div class="rank-main"><div class="rank-name">样品 ' + pad2(it.no) + '</div>' +
+        '<div class="rank-bar"><div class="rank-fill" style="width:' + pct.toFixed(1) + '%"></div></div>' +
+        '<div class="cva-tasterline">' + who + '</div></div>' +
+      '<div class="rank-nums"><div class="rank-score">' + it.med.toFixed(2) + ' <small>中位</small></div>' +
+        '<div class="rank-dislikes">' + it.vals.length + ' 人 · 极差 ' + (it.mx-it.mn).toFixed(2) + '</div></div>' +
+    '</div>';
+  }
+  listEl.innerHTML = html;
+}
+function renderDescBoard(listEl, headEl, rows, sid, headPrefix, emptyHtml){
+  if(!rows.length){ headEl.innerHTML = headPrefix; listEl.innerHTML = emptyHtml || '<div class="empty">暂无数据</div>'; return; }
+  var n = Math.max.apply(null, rows.map(function(r){ return r.sample_count || 0; }).concat([N]));
+  var buckets = [];
+  for(var i=0;i<n;i++) buckets.push({ secs:{}, ortho:{}, retro:{}, taste:{}, mf:{}, cnt:0 });
+  rows.forEach(function(r){
+    (r.samples||[]).forEach(function(s){
+      if(!s || !(s.no >= 1 && s.no <= n)) return;
+      var b = buckets[s.no-1]; b.cnt++;
+      USED.forEach(function(sec){
+        var v = (s.intensity||s.s||{})[sec.k];
+        if(typeof v === "number"){ if(!b.secs[sec.k]) b.secs[sec.k] = []; b.secs[sec.k].push(v); }
+      });
+      var c = s.cata || {};
+      ["ortho","retro","taste","mf"].forEach(function(kind){
+        (c[kind]||[]).forEach(function(ix){
+          var term = (CATA[kind]||[])[ix];
+          if(term) b[kind][term] = (b[kind][term]||0) + 1;
+        });
+      });
+    });
+  });
+  headEl.innerHTML = headPrefix + ' · ' + rows.length + ' 人记录 · ' + n + ' 支样品<br>描述性评估不产生分数，看的是强度分布与词频';
+  var html = "";
+  for(var q=0;q<n;q++){
+    var b = buckets[q];
+    if(!b.cnt) continue;
+    var meanLine = USED.map(function(sec){
+      var a = b.secs[sec.k];
+      if(!a || !a.length) return sec.n + ' —';
+      var sum = a.reduce(function(x,y){ return x+y; }, 0);
+      return sec.n + ' ' + (sum/a.length).toFixed(1);
+    }).join(' · ');
+    function tags(obj, cap){
+      var arr = Object.keys(obj).map(function(k){ return { t:k, c:obj[k] }; });
+      arr.sort(function(x,y){ return y.c - x.c; });
+      return arr.slice(0, cap).map(function(x){ return '<span class="wf-tag">' + x.t + ' <b>' + x.c + '</b></span>'; }).join('');
+    }
+    html += '<div class="wf">' +
+      '<div class="wf-t">样品 ' + pad2(q+1) + '<em>' + b.cnt + ' 人记录 · 平均强度</em></div>' +
+      '<div class="cva-tasterline">' + meanLine + '</div>' +
+      '<div class="wf-t" style="margin-top:9px">常见描述<em>干香湿香 / 风味余韵 / 主味 / 口感</em></div>' +
+      '<div class="wf-row">' + (tags(b.ortho,4) + tags(b.retro,4) + tags(b.taste,2) + tags(b.mf,2) || '<span class="wf-tag">—</span>') + '</div>' +
+    '</div>';
+  }
+  listEl.innerHTML = html || '<div class="empty">还没有可统计的记录</div>';
+}
+function renderBoard(){
+  readEnv();
+  var mode = MODE;
+  fetchRows(SID).then(function(rows){
+    var empty = (mode === "desc") ? '<div class="empty">还没有人提交<br>先来做一份描述性评估 ☕</div>'
+                                  : '<div class="empty">还没有人提交<br>先来做一份 CVA 评估 ☕</div>';
+    var fn = (mode === "desc") ? renderDescBoard : renderCvaBoard;
+    fn($("boardList"), $("boardHead"), rows || [], SID, '本轮 <b>' + esc(sid0()) + '</b>', empty);
+    var d = new Date(), p = function(x){ return (x<10?"0":"") + x; };
+    var bh = $("boardHead");
+    if(bh) bh.innerHTML += '<div style="font-size:10px;color:#B8A794;margin-top:5px;">更新于 ' + p(d.getHours()) + ":" + p(d.getMinutes()) + ":" + p(d.getSeconds()) + '</div>';
+  }).catch(function(e){
+    var bh = $("boardHead");
+    if(bh) bh.textContent = (e && e.status === 404) ? "数据库还没建表：先在 Supabase SQL Editor 跑 cva_entries 建表 SQL" : "榜单加载失败，检查网络后重试";
+    console.error(e);
+  });
+}
+function sid0(){ return SID; }
+function esc(s){ return String(s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]; }); }
+
+/* ---------- 历史 ---------- */
+function loadHistory(){
+  readEnv();
+  var listEl = $("histList");
+  listEl.innerHTML = '<div class="hist-empty">加载中…</div>';
+  fetchAllRows().then(function(rows){
+    var groups = {};
+    (rows||[]).forEach(function(r){
+      if(!r.session_id) return;
+      var g = groups[r.session_id] || (groups[r.session_id] = { count:0, ts:"", n:0, mode:"cva" });
+      g.count++;
+      if(r.created_at && (!g.ts || r.created_at < g.ts)) g.ts = r.created_at;
+      if(!g.n) g.n = r.sample_count || 0;
+      if(r.mode === "desc") g.mode = "desc";
+    });
+    var arr = Object.keys(groups).map(function(sid){ var g = groups[sid]; g.sid = sid; return g; });
+    arr.sort(function(a,b){ return (b.ts||"").localeCompare(a.ts||""); });
+    histSessions = arr;
+    if(!arr.length){ listEl.innerHTML = '<div class="hist-empty">还没有历史轮次<br>CVA 评估的记录会存在这里</div>'; return; }
+    var html = "";
+    arr.forEach(function(g){
+      var nowTag = (g.sid === SID) ? '<span class="hi-now">当前轮</span>' : "";
+      var tsTxt = g.ts ? fmtTs(g.ts) : g.sid;
+      html += '<div class="hist-item" onclick="CVAMode.openHistoryDetail(\'' + g.sid + '\',\'' + g.mode + '\')">' +
+        '<div class="hi-main"><div class="hi-time">' + esc(tsTxt) + nowTag + '</div>' +
+        '<div class="hi-sub">' + (g.mode === "desc" ? "📋 描述性评估" : "🎯 CVA 情感评估") + ' · ' + g.count + ' 人 · ' + g.n + ' 样品</div></div>' +
+        '<div class="hi-go">查看 ›</div></div>';
+    });
+    listEl.innerHTML = html;
+  }).catch(function(e){
+    listEl.innerHTML = '<div class="hist-empty">历史加载失败<br>请检查网络后重试</div>';
+    console.error(e);
+  });
+}
+var histSessions = [], viewingHistSid = "", viewingHistMode = "cva";
+function fmtTs(iso){
+  try{
+    var d = new Date(iso), p = function(x){ return (x<10?"0":"") + x; };
+    return d.getFullYear() + "-" + p(d.getMonth()+1) + "-" + p(d.getDate()) + " " + p(d.getHours()) + ":" + p(d.getMinutes());
+  }catch(e){ return iso || ""; }
+}
+function openHistoryDetail(sid, mode){
+  viewingHistSid = sid; viewingHistMode = mode || "cva";
+  var meta = null;
+  for(var i=0;i<histSessions.length;i++){ if(histSessions[i].sid === sid){ meta = histSessions[i]; break; } }
+  $("histDetailTitle").textContent = "轮次详情 · " + (meta && meta.ts ? fmtTs(meta.ts) : sid);
+  var delRow = $("histDelRow");
+  if(delRow){
+    delRow.dataset.info = (meta && meta.ts ? fmtTs(meta.ts) : sid) + " · " + (meta ? meta.count : 0) + " 人";
+    delRow.classList.remove("hidden");
+  }
+  $("histListWrap").classList.add("hidden");
+  $("histDetailWrap").classList.remove("hidden");
+  $("histDetailHead").textContent = "";
+  $("histDetailList").innerHTML = '<div class="hist-empty">加载中…</div>';
+  var url = window.SUPABASE_URL + TBL + "?select=taster_id,mode,sample_count,samples,created_at&session_id=eq." + encodeURIComponent(sid) + "&limit=2000";
+  var pr = isDemo ? Promise.resolve(demoRowsOf(sid)) : apiGet(url);
+  pr.then(function(rows){
+    var rs = (rows||[]).filter(function(r){ return r.mode === viewingHistMode; });
+    var fn = (viewingHistMode === "desc") ? renderDescBoard : renderCvaBoard;
+    fn($("histDetailList"), $("histDetailHead"), rs, sid, '📜 ' + esc(meta && meta.ts ? fmtTs(meta.ts) : sid),
+       '<div class="empty">这轮还没有记录</div>');
+  }).catch(function(e){
+    $("histDetailHead").textContent = "加载失败，请重试";
+    console.error(e);
+  });
+}
+function deleteRound(){
+  var sid = viewingHistSid;
+  if(!sid) return;
+  var delRow = $("histDelRow");
+  var info = (delRow && delRow.dataset.info) ? delRow.dataset.info : ("轮次 " + sid);
+  if(!confirm("确定删除「" + info + "」的 CVA 记录？\n删除后不可恢复。")) return;
+  var key = prompt("输入管理口令后才能删除", "");
+  if(!key){ toast("已取消删除"); return; }
+  if(key !== window.ADMIN_KEY){ toast("口令不对，删除已取消"); return; }
+  if(isDemo){ toast("演示模式不支持删除"); return; }
+  retryFetch(function(){
+    return fetch(window.SUPABASE_URL + "/rest/v1/rpc/delete_cva_session", {
+      method:"POST",
+      headers:{ "apikey": window.SUPABASE_ANON_KEY, "Authorization":"Bearer " + window.SUPABASE_ANON_KEY, "Content-Type":"application/json", "Prefer":"return=minimal" },
+      body: JSON.stringify({ p_session: sid, p_key: key })
+    }).then(function(r){ if(!r.ok){ var e = new Error("POST " + r.status); e.status = r.status; throw e; } return r; });
+  }, 2).then(function(){
+    toast("已删除该轮");
+    histSessions = histSessions.filter(function(g){ return g.sid !== sid; });
+    $("histDetailWrap").classList.add("hidden");
+    $("histListWrap").classList.remove("hidden");
+    loadHistory();
+  }).catch(function(e){
+    var msg = String(e && e.message || e);
+    if(msg.indexOf("404") >= 0) toast("删除未配置：先在 Supabase SQL Editor 跑 delete_cva_session 那段");
+    else toast("删除失败，检查网络后重试");
+    console.error(e);
+  });
+}
+
+/* ---------- 演示数据 ---------- */
+function seedDemo(){
+  if(!isDemo) return;
+  var rows = demoRows();
+  for(var t=0;t<3;t++){
+    (function(ti){
+      var samples = [];
+      for(var i=0;i<N;i++){
+        var s = {};
+        SECS.forEach(function(sec){
+          s[sec.k] = Math.max(1, Math.min(9, 6 + Math.round((Math.random()-0.4)*2) + (ti===1?1:0)));
+        });
+        var rec = { no:i+1, s:s, cata:{ortho:[],retro:[],taste:[],mf:[]}, nt:{}, nu:0, df:0, dt:"" };
+        rec.cata.ortho = [0,4,10].slice(0, 2+ (i%2));
+        rec.cata.mf = [3];
+        rec.score = round25(
+          SECS.reduce(function(a,x){ return a + s[x.k]; }, 0)*0.65625 + 52.75 - 2*(i%2)
+        );
+        samples.push(rec);
+      }
+      rows.push({ taster_id: "demo" + ti + "abc", taster_name: "杯测员" + (ti+1), mode: MODE, sample_count: N, samples: samples, created_at: new Date().toISOString() });
+    })(t);
+  }
+  saveDemoRows(rows);
+  toast("已填充 3 位演示评估");
+  renderBoard();
+}
+
+/* ---------- 启动 ---------- */
+function bootCva(){
+  if(!voterId){ voterId = "v" + Math.random().toString(36).slice(2,10); localStorage.setItem(LS_VOTER, voterId); }
+  if(localStorage.getItem(SKEY + SID)){
+    var t = $("doneTitle"), s = $("doneSub");
+    if(t) t.textContent = IS_DESC ? "描述性评估已提交" : "CVA 评估已提交";
+    if(s) s.textContent = "这轮你已经提交过了";
+    var bar = $("submitBar"); if(bar) bar.classList.add("hidden");
+    showView("view-done");
+    return;
+  }
+  render();
+}
+
+window.CVAMode = {
+  boot: bootCva, render: render, submit: submit, renderBoard: renderBoard,
+  loadHistory: loadHistory, openHistoryDetail: openHistoryDetail, deleteRound: deleteRound,
+  seedDemo: seedDemo, setView: setView, stepTo: stepTo, jump: jump,
+  setScore: setScore, setNote: setNote, setRoast: setRoast, setTasterName: setTasterName,
+  toggleCata: toggleCata, toggleCup: toggleCup, setDefect: setDefect,
+  isCva: true
+};
 })();
 </script>
 
