@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>求索杯测投票</title>
-<meta name="version" content="v0.6.1-cva-cups">
+<meta name="version" content="v0.6.2-mode-switch-fix">
 <style>
 :root{
   --bg:#F5F0EB; --card:#FFFFFF; --ink:#3C2A1E; --sub:#8B7355; --gold:#C9A96E;
@@ -198,6 +198,10 @@ body{background:var(--bg);font-family:-apple-system,"PingFang SC","Microsoft YaH
 .cva-name-row span{font-size:12px;color:var(--sub);white-space:nowrap;}
 .cva-name-row input{flex:1;border:none;font-size:13px;font-family:inherit;color:var(--ink);background:transparent;min-width:0;}
 .cva-name-row input:focus{outline:none;}
+.cva-mode-bar{font-size:13px;font-weight:700;text-align:center;border-radius:10px;padding:9px 8px;margin-bottom:10px;line-height:1.5;}
+.cva-mode-bar.cva{background:#FFF6E5;color:#8A6A1F;border:1px solid #F0DCB0;}
+.cva-mode-bar.desc{background:#EAF3EC;color:#2F6B44;border:1px solid #C9E0D2;}
+.cva-mode-bar b{font-weight:800;text-decoration:underline;}
 </style>
 </head>
 <body>
@@ -274,6 +278,7 @@ body{background:var(--bg);font-family:-apple-system,"PingFang SC","Microsoft YaH
 
   <!-- CVA 评估视图（情感偏好 / 描述性） -->
   <div id="view-cva" class="hidden">
+    <div class="cva-mode-bar cva" id="cvaModeBar"></div>
     <div class="cva-note" id="cvaNote"></div>
     <div class="cva-name-row">
       <span>杯测员</span>
@@ -1533,21 +1538,45 @@ var CATA_LIMIT = { ortho:5, retro:5, taste:2, mf:2 };
 var DEFECTS = ["霉味","酚味","土豆"];
 
 /* 分组：与 SCA 官方表单的框一一对应 */
-var STEPS = [
-  {t:"干香 · 湿香", secs:["fragrance","aroma"], cata:["ortho"],  hint:"干香湿香共用一个打勾框，最多勾 5 个"},
-  {t:"风味 · 余韵", secs:["flavor","aftertaste"], cata:["retro","taste"], hint:"回鼻最多 5 个 · 主味最多 2 个"},
-  {t:"酸质", secs:["acidity"], free:true, hint:"没有打勾表，自己写描述词"},
-  {t:"甜感", secs:["sweetness"], free:true, hint:"没有打勾表，自己写描述词"},
-  {t:"口感", secs:["mouthfeel"], cata:["mf"], hint:"最多勾 2 个"},
-  {t:"整体", secs:["overall"], hint:"整杯综合印象，最后评"}
-];
-/* 描述性评估没有「整体」，多一段烘焙度；情感表多一段杯数/缺陷 */
-if(IS_DESC){
-  STEPS.pop();
-  STEPS.push({t:"烘焙度", roast:true, hint:"目视记录，如 中烘 / Agtron 63"});
-} else {
-  STEPS.push({t:"杯数 · 缺陷", cups:true});
+function buildSteps(){
+  var st = [
+    {t:"干香 · 湿香", secs:["fragrance","aroma"], cata:["ortho"],  hint:"干香湿香共用一个打勾框，最多勾 5 个"},
+    {t:"风味 · 余韵", secs:["flavor","aftertaste"], cata:["retro","taste"], hint:"回鼻最多 5 个 · 主味最多 2 个"},
+    {t:"酸质", secs:["acidity"], free:true, hint:"没有打勾表，自己写描述词"},
+    {t:"甜感", secs:["sweetness"], free:true, hint:"没有打勾表，自己写描述词"},
+    {t:"口感", secs:["mouthfeel"], cata:["mf"], hint:"最多勾 2 个"},
+    {t:"整体", secs:["overall"], hint:"整杯综合印象，最后评"}
+  ];
+  /* 描述性评估没有「整体」，多一段烘焙度；情感表多一段杯数/缺陷 */
+  if(IS_DESC){
+    st.pop();
+    st.push({t:"烘焙度", roast:true, hint:"目视记录，如 中烘 / Agtron 63"});
+  } else {
+    st.push({t:"杯数 · 缺陷", cups:true});
+  }
+  return st;
 }
+var STEPS = buildSteps();
+
+/* 模式名（页面上要一眼看出进的是哪张表） */
+function modeName(){ return IS_DESC ? "📋 描述性评估" : "🎯 CVA 情感评估"; }
+function modeLine(){
+  return IS_DESC
+    ? "📋 描述性评估｜7 段 0~15 强度｜<b>不出分</b>｜看强度分布和词频"
+    : ("🎯 CVA 情感评估｜8 段 9 分制｜<b>自动出分</b>｜每支 " + CUPS + " 杯" + (cupsAllowed() ? "（可评一致性）" : "（1 杯，不评一致性）"));
+}
+/* 切换模式：STEPS / USED / 草稿 key 都要跟着换 */
+function setMode(m){
+  var d = (m === "desc");
+  if(MODE === m && IS_DESC === d) return false;
+  MODE = m; IS_DESC = d;
+  USED = IS_DESC ? SECS.slice(0,7) : SECS;
+  STEPS = buildSteps();
+  if(step >= STEPS.length) step = 0;
+  return true;
+}
+function draftKeyOf(){ return DKEY + MODE + "_" + SID; }
+function subKeyOf(){ return SKEY + MODE + "_" + SID; }
 
 /* ---------- 数据 ---------- */
 function blank(){
@@ -1556,7 +1585,7 @@ function blank(){
 }
 function loadData(){
   try{
-    var raw = localStorage.getItem(DKEY + SID);
+    var raw = localStorage.getItem(draftKeyOf());
     if(raw){
       var a = JSON.parse(raw);
       if(Array.isArray(a) && a.length === N){
@@ -1568,12 +1597,13 @@ function loadData(){
   return arr;
 }
 var data = loadData();
-function saveData(){ try{ localStorage.setItem(DKEY + SID, JSON.stringify(data)); }catch(e){} }
+function saveData(){ try{ localStorage.setItem(draftKeyOf(), JSON.stringify(data)); }catch(e){} }
 
-/* 管理员台改样品数/换轮次时会 replaceState 改 URL，所以每次渲染前重新读环境 */
+/* 管理员台改方式/样品数/杯数/换轮次时会 replaceState 改 URL，所以每次渲染前重新读环境 */
 function readEnv(){
   var q = new URLSearchParams(location.search);
   var s = (q.get("s")||"").trim();
+  var t = (q.get("t")||"").trim();
   var u = parseInt(q.get("n"),10), v;
   if(u >= 1 && u <= 30){ v = u; }
   else {
@@ -1581,11 +1611,15 @@ function readEnv(){
     v = (ls >= 1 && ls <= 30) ? Math.min(ls,12) : 4;
   }
   var changed = false;
+  if(t === "cva" || t === "desc"){ if(setMode(t)) changed = true; }
   if(s && s !== SID){ SID = s; changed = true; }
   if(v !== N){ N = v; changed = true; }
   var cu = parseInt(q.get("c"), 10);
   if(cu >= 1 && cu <= 5 && cu !== CUPS){ CUPS = cu; }
-  if(changed){ data = loadData(); }
+  if(changed){
+    data = loadData();
+    if(cur >= N) cur = 0;
+  }
 }
 
 /* ---------- 计分（SCA 104 §5.5） ---------- */
@@ -1799,7 +1833,7 @@ function cardHtml(i){
 }
 function render(){
   readEnv();
-  if(localStorage.getItem(SKEY + SID)){
+  if(localStorage.getItem(subKeyOf())){
     var t0 = $("doneTitle"), s0 = $("doneSub");
     if(t0) t0.textContent = IS_DESC ? "描述性评估已提交" : "CVA 评估已提交";
     if(s0) s0.textContent = "这轮你已经提交过了";
@@ -1809,13 +1843,18 @@ function render(){
   }
   showView("view-cva");
   var bs = document.querySelector(".brand small");
-  if(bs) bs.textContent = IS_DESC ? "SCA CVA 描述性评估 · 15 分强度" : "SCA CVA 情感偏好评估 · 9 分制";
+  if(bs) bs.textContent = IS_DESC ? "描述性评估 · 15 分强度" : ("CVA 情感评估 · 9 分制 · " + CUPS + " 杯");
+  var mb = $("cvaModeBar");
+  if(mb){
+    mb.className = "cva-mode-bar " + (IS_DESC ? "desc" : "cva");
+    mb.innerHTML = modeLine();
+  }
   var ni = $("cvaTasterName"); if(ni && ni.value !== tasterName) ni.value = tasterName;
   var note = $("cvaNote");
   if(note){
     note.innerHTML = IS_DESC
-      ? "SCA CVA 描述性评估 · 只记录「是什么味、多强」，不打分<br>7 段各 0~15 强度 · 打勾表按官方词库"
-      : ("SCA CVA 情感偏好评估 · 记录「你喜不喜欢」<br>8 段各 9 分制（5 = 不高不低）· 分数按官方公式自动算 · 每支 " + CUPS + " 杯" + (cupsAllowed() ? "" : "（1 杯不评一致性）"));
+      ? "只记录「是什么味、多强」，<b>不打分</b> · 打勾表按官方词库 · 酸质甜感要自己写词"
+      : ("记录「你喜不喜欢」<br>8 段各 9 分制（5 = 不高不低）· 分数按官方公式自动算" + (cupsAllowed() ? "" : " · 1 杯不评一致性"));
   }
   renderChips(); renderCard(); updateBar(); updateViewBtns();
   var bar = $("submitBar"); if(bar) bar.classList.remove("hidden");
@@ -1965,8 +2004,8 @@ function submit(){
   if(btn){ btn.disabled = true; btn.textContent = "提交中…"; }
   var row = { session_id: SID, taster_id: voterId, taster_name: (tasterName || null), mode: MODE, sample_count: N, cup_count: CUPS, samples: samples };
   function done(){
-    localStorage.setItem(SKEY + SID, "1");
-    localStorage.removeItem(DKEY + SID);
+    localStorage.setItem(subKeyOf(), "1");
+    localStorage.removeItem(draftKeyOf());
     var t = $("doneTitle"), s = $("doneSub");
     if(t) t.textContent = IS_DESC ? "描述性评估已提交" : "CVA 评估已提交";
     if(s) s.innerHTML = "感谢参与！<br>你的 " + samples.length + " 支样品记录已入库" + (med!=null ? "，中位分 <b>" + med.toFixed(2) + "</b>" : "");
@@ -1999,7 +2038,7 @@ function median(a){
 function shortId(v){ v = String(v||""); return v.length > 4 ? ("··" + v.slice(-4)) : v; }
 
 function fetchRows(sid){
-  if(isDemo) return Promise.resolve(demoRowsOf(sid));
+  if(isDemo) return Promise.resolve(demoRowsOf(sid).filter(function(r){ return r.mode === MODE; }));
   var url = window.SUPABASE_URL + TBL + "?select=taster_id,taster_name,mode,sample_count,cup_count,samples,created_at&session_id=eq." + encodeURIComponent(sid) + "&limit=2000";
   if(sid === SID) url += "&mode=eq." + MODE;
   return apiGet(url);
@@ -2175,7 +2214,7 @@ function openHistoryDetail(sid, mode){
   $("histDetailHead").textContent = "";
   $("histDetailList").innerHTML = '<div class="hist-empty">加载中…</div>';
   var url = window.SUPABASE_URL + TBL + "?select=taster_id,mode,sample_count,samples,created_at&session_id=eq." + encodeURIComponent(sid) + "&limit=2000";
-  var pr = isDemo ? Promise.resolve(demoRowsOf(sid)) : apiGet(url);
+  var pr = isDemo ? Promise.resolve(demoRowsOf(sid).filter(function(r){ return r.mode === viewingHistMode; })) : apiGet(url);
   pr.then(function(rows){
     var rs = (rows||[]).filter(function(r){ return r.mode === viewingHistMode; });
     var fn = (viewingHistMode === "desc") ? renderDescBoard : renderCvaBoard;
@@ -2250,7 +2289,7 @@ function seedDemo(){
 /* ---------- 启动 ---------- */
 function bootCva(){
   if(!voterId){ voterId = "v" + Math.random().toString(36).slice(2,10); localStorage.setItem(LS_VOTER, voterId); }
-  if(localStorage.getItem(SKEY + SID)){
+  if(localStorage.getItem(subKeyOf())){
     var t = $("doneTitle"), s = $("doneSub");
     if(t) t.textContent = IS_DESC ? "描述性评估已提交" : "CVA 评估已提交";
     if(s) s.textContent = "这轮你已经提交过了";
