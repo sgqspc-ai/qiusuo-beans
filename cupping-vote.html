@@ -1849,6 +1849,8 @@ function render(){
     mb.className = "cva-mode-bar " + (IS_DESC ? "desc" : "cva");
     mb.innerHTML = modeLine();
   }
+  var tv = $("tabVote");
+  if(tv) tv.textContent = IS_DESC ? "描述性" : "情感评估";
   var ni = $("cvaTasterName"); if(ni && ni.value !== tasterName) ni.value = tasterName;
   var note = $("cvaNote");
   if(note){
